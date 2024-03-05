@@ -174,7 +174,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         x0_cov = 0.01*np.eye(nx)
                     elif dist == "quadratic":
                         w_max = 0.2*np.ones(nx)
-                        w_min = -0.1*np.ones(nx)
+                        w_min = 0.0*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
@@ -196,7 +196,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         mu_v = 0.3*np.zeros((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = 0.0*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2)
                         
