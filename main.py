@@ -124,10 +124,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     B = C = Q = R = np.eye(10) 
     Qf = np.zeros((10,10))
     #----------------------------
+    # HERE!! change 1 to 0 if you don't want to use given lambda
+    use_lambda = 0
+    
     #theta_v_list = [1.0, 1.2, 1.4, 1.6, 2.0]
-    theta_v_list = [2.0]
+    theta_v_list = [1.5]
     #theta_w_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    theta_w_list = [2.0] # theta_w have no effect if use set use_lambda = 1
+    theta_w_list = [1.5] # theta_w have no effect if use set use_lambda = 1
     noisedist = [noise_dist1]
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
@@ -193,7 +196,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         mu_v = 0.3*np.zeros((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = 0.0*np.ones(ny)
-                        v_max = 1.0*np.ones(ny)
+                        v_max = 1.5*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2)
                         
@@ -216,8 +219,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     output_drce_list = []
                     #Initialize controllers
                     
-                    # HERE!! change 1 to 0 if you don't want to use given lambda
-                    use_lambda = 1
+                    
                     drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, use_lambda)
                     wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda)
                     lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat)

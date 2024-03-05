@@ -46,7 +46,7 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     plt.yticks(fontsize=16)
     plt.savefig(path +'/J_comp_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight")
     plt.clf()
-    print("Noise plot!!")
+    print("Noise plot generated!!")
 
 
 if __name__ == "__main__":

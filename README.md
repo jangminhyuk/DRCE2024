@@ -13,6 +13,17 @@ This repository includes the source code for implementing Linear-Quadratic-Gauss
 - **[MOSEK (>= 9.3)](https://www.mosek.com/)**
 - (pickle5) if relevant error occurs
 
+## Plot
+1) System Disturbance : Normal & Observation Noise : Normal
+<center>
+  <img src='/result_save/normal_normal_params/params_normal_normal.pdf' width='500' height='300' />
+  <figcaption>Normal Disturbance and Noise distribution</figcaption>
+</center>
+<center>
+  <img src='/result_save/normal_normal_noiseplot/J_comp_normal_normal.pdf' width='500' height='300' />
+  <figcaption>Normal Disturbance and Noise distribution</figcaption>
+</center>
+
 ## Code explanation
 
 1234
