@@ -103,8 +103,8 @@ def save_data(path, data):
     pickle.dump(data, output)
     output.close()
 
-def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results, noise_plot_results):
-    
+def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
+    noise_plot_results = True
     lambda_ = 10
     seed = 2024 # any value
     if noise_plot_results: # if you need to draw plot_J
@@ -340,6 +340,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print('\n-------Summary-------')
                     print("dist : ", dist, "noise_dist : ", noise_dist, "/ num_disturbance_samples : ", num_samples, "/ theta_v : ", theta, " / noise sample effect PLOT / Seed : ",seed)
                     
+    print("Data generation Completed!!")
+    print("Use plot_J.py to draw noise_sample_size effect plot")
             
 
 if __name__ == "__main__":
@@ -350,9 +352,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
-    parser.add_argument('--plot', required=False, action="store_true") #plot results+
-    parser.add_argument('--noise_plot', required=False, action="store_true") #plot plotJ_results, (effect of num_noise_samples)
 
     args = parser.parse_args()
     np.random.seed(100)
-    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.plot, args.noise_plot)
+    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon)
