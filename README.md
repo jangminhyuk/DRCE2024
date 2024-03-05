@@ -16,11 +16,11 @@ This repository includes the source code for implementing Linear-Quadratic-Gauss
 ## Plot
 1) System Disturbance : Normal & Observation Noise : Normal
 <center>
-  <img src='/result_save/normal_normal_params/params_normal_normal.pdf' width='500' height='300' />
+  <img src='/result_save/normal_normal_params/normal_normal_params.jpg' width='500' height='300' />
   <figcaption>Normal Disturbance and Noise distribution</figcaption>
 </center>
 <center>
-  <img src='/result_save/normal_normal_noiseplot/J_comp_normal_normal.pdf' width='500' height='300' />
+  <img src='/result_save/normal_normal_noiseplot/normal_normal_noiseplot.jpg' width='500' height='300' />
   <figcaption>Normal Disturbance and Noise distribution</figcaption>
 </center>
 
