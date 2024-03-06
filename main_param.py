@@ -147,7 +147,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     #-------Initialization-------
                     if dist =="uniform":
                         #disturbance distribution parameters
-                        w_max = 0.3*np.ones(nx)
+                        w_max = 0.6*np.ones(nx)
                         w_min = -0.3*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 1/12*np.diag((w_max - w_min)**2)
@@ -183,7 +183,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     #-------Noise distribution ---------#
                     if noise_dist == "uniform":
                         v_min = -0.5*np.ones(ny)
-                        v_max = 0.5*np.ones(ny)
+                        v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 1/12*np.diag((v_max - v_min)**2)
                     elif noise_dist =="normal":

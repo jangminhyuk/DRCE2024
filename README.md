@@ -70,17 +70,23 @@ python plot_params.py --dist quadratic --noise_dist quadratic
 
 ## Plot
 ### System Disturbance & Observation Noise : Nonzero-mean Normal distribution
+Disturbance : N(0,1) , Initial State : N(0, 0.01), Noise : N(0.3, 0.3)
 <center>
   <img src='/result_save/normal_normal_params/normal_normal_params.jpg' width='500'/>
+  <figcaption>10 disturbance & noise samples</figcaption>
 </center>
 <center>
   <img src='/result_save/normal_normal_noiseplot/normal_normal_noiseplot.jpg' width='500' />
+  <figcaption>theta_w : 1.5, theta_v : 1.5, theta_x0 = 0.5</figcaption>
 </center>
 
 ### System Disturbance & Observation Noise : Nonzero-mean U-Quadratic distribution
+Disturbance : UQ(-0.1,0.2) , Initial State : UQ(-0.1, 0.1), Noise : UQ(0.0, 1.0)
 <center>
   <img src='/result_save/quad_quad_params/quad_quad_params.jpg' width='500'/>
+  <figcaption>10 disturbance & noise samples</figcaption>
 </center>
 <center>
   <img src='/result_save/quad_quad_noiseplot/quad_quad_noiseplot.jpg' width='500' />
+  <figcaption>theta_w : 2.0, theta_v : 2.0, theta_x0 = 0.5</figcaption>
 </center>
