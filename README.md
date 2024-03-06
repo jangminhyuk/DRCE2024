@@ -67,16 +67,9 @@ Same as main.py instructions, you need to specifiy what distribution you used, i
 python plot_params.py --dist quadratic --noise_dist quadratic
 ```
 
-## Example output
-
-An example output with default settings:
-
-```
-1234
-```
 
 ## Plot
-### System Disturbance : Normal & Observation Noise : Nonzero-mean Normal distribution
+### System Disturbance & Observation Noise : Nonzero-mean Normal distribution
 <center>
   <img src='/result_save/normal_normal_params/normal_normal_params.jpg' width='500'/>
 </center>
@@ -84,4 +77,10 @@ An example output with default settings:
   <img src='/result_save/normal_normal_noiseplot/normal_normal_noiseplot.jpg' width='500' />
 </center>
 
-### System Disturbance : Normal & Observation Noise : Nonzero-mean U-Quadratic distribution
+### System Disturbance & Observation Noise : Nonzero-mean U-Quadratic distribution
+<center>
+  <img src='/result_save/normal_normal_params/quad_quad_params.jpg' width='500'/>
+</center>
+<center>
+  <img src='/result_save/normal_normal_noiseplot/quad_quad_noiseplot.jpg' width='500' />
+</center>

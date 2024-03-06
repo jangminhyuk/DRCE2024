@@ -126,8 +126,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     
     #theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
     #lambda_list = [5, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    lambda_list = [5, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
+    lambda_list = [6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
@@ -171,7 +171,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 0.01*np.eye(nx)
                     elif dist == "quadratic":
                         w_max = 0.2*np.ones(nx)
-                        w_min = 0.0*np.ones(nx)
+                        w_min = -0.1*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
