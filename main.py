@@ -125,7 +125,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     Qf = np.zeros((10,10))
     #----------------------------
     # HERE!! change 1 to 0 if you don't want to use given lambda
-    use_lambda = 0
+    use_lambda = 1
     
     #theta_v_list = [1.0, 1.2, 1.4, 1.6, 2.0]
     theta_v_list = [2.0]

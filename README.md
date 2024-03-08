@@ -34,7 +34,6 @@ The parameters can be changed by adding additional command-line arguments:
 - num_noise_samples : Select the number of noise samples [default : 10]
 - horizon : Select the time horizon  [default : 20]
 
-#### Usage
 
 ```
 python main.py --dist quadratic --num_sim 1000 --num_samples 15
@@ -77,7 +76,18 @@ Disturbance : N(0,1) , Initial State : N(0, 0.01), Noise : N(0.3, 0.3)
 </center>
 <center>
   <img src='/result_save/normal_normal_noiseplot/normal_normal_noiseplot.jpg' width='500' />
-  <figcaption>theta_w : 1.5, theta_v : 1.5, theta_x0 = 0.5</figcaption>
+  <figcaption>lambda : 10, theta_v : 1.5, theta_x0 = 0.5</figcaption>
+</center>
+
+### System Disturbance & Observation Noise : Nonzero-mean Uniform distribution
+Disturbance : U(-0.3,0.6) , Initial State : U(-0.05, 0.05), Noise : U(-0.5, 1.0)
+<center>
+  <img src='/result_save/uniform_uniform_params/uniform_uniform_params.jpg' width='500'/>
+  <figcaption>10 disturbance & noise samples</figcaption>
+</center>
+<center>
+  <img src='/result_save/uniform_uniform_noiseplot/uniform_uniform_noiseplot.jpg' width='500' />
+  <figcaption>lambda : 10, theta_v : 2.0, theta_x0 = 0.5</figcaption>
 </center>
 
 ### System Disturbance & Observation Noise : Nonzero-mean U-Quadratic distribution
@@ -88,5 +98,5 @@ Disturbance : UQ(-0.1,0.2) , Initial State : UQ(-0.1, 0.1), Noise : UQ(0.0, 1.0)
 </center>
 <center>
   <img src='/result_save/quad_quad_noiseplot/quad_quad_noiseplot.jpg' width='500' />
-  <figcaption>theta_w : 2.0, theta_v : 2.0, theta_x0 = 0.5</figcaption>
+  <figcaption>lambda : 10, theta_v : 2.0, theta_x0 = 0.5</figcaption>
 </center>
