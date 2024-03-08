@@ -34,9 +34,9 @@ The parameters can be changed by adding additional command-line arguments:
 - num_noise_samples : Select the number of noise samples [default : 10]
 - horizon : Select the time horizon  [default : 20]
 
-
+Example
 ```
-python main.py --dist quadratic --num_sim 1000 --num_samples 15
+python main.py --dist quadratic --noise_dist quadratic --num_sim 1000 --num_samples 15
 ```
 After the data generated, run 
 ```
