@@ -7,8 +7,7 @@ from scipy.optimize import minimize
 import cvxpy as cp
 import scipy
 
-#This method implements the SDP formualation of MMSE estimation problem from "Shafieezadeh Abadeh, Soroosh, et al. "Wasserstein distributionally robust Kalman filtering." Advances in Neural Information Processing Systems 31 (2018)."
-#For Kalman filtering, this method makes the ambiguity set of dimension [nx + ny] 
+# Distributionally Robust Control and Estimation
 class DRCE:
     def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda):
         self.dist = dist
@@ -64,10 +63,6 @@ class DRCE:
             
         print("DRCE")
         
-        # Will use same optimal lambda from WDRC!! So, not calculate again in here
-        #self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
-#        self.lambda_ = 3.5
-        #self.lambda_ = self.binarysearch_infimum_penalty_finite()
         self.P = np.zeros((self.T+1, self.nx, self.nx))
         self.S = np.zeros((self.T+1, self.nx, self.nx))
         self.r = np.zeros((self.T+1, self.nx, 1))
@@ -77,11 +72,10 @@ class DRCE:
         self.H = np.zeros(( self.T, self.nx, self.nx))
         self.h = np.zeros(( self.T, self.nx, 1))
         self.g = np.zeros(( self.T, self.nx, self.nx))
-        #self.sdp_prob = self.gen_sdp(self.lambda_)
         
 
     def optimize_penalty(self):
-        # Find inf_penalty (infimum value of penalty coefficient satisfying Assumption 1)
+        # Find inf_penalty (infimum value of penalty coefficient satisfying Assumption)
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 100000, 'disp': False, 'maxiter': 100000})
@@ -204,25 +198,19 @@ class DRCE:
         M_test = cp.Variable((self.ny, self.ny), symmetric=True)
         
         #Parameters
-        #Sigma_hat_12_var = cp.Parameter((self.nx, self.nx)) # nominal Sigma_w root
         Sigma_w = cp.Parameter((self.nx, self.nx)) # nominal Sigma_w
         radi = cp.Parameter(nonneg=True)
         x_cov = cp.Parameter((self.nx, self.nx)) # x_cov from before time step
         M_hat = cp.Parameter((self.ny, self.ny))
-        #M_hat_12_var = cp.Parameter((self.ny, self.ny)) # nominal M_hat root
         P_var = cp.Parameter((self.nx,self.nx))
         S_var = cp.Parameter((self.nx,self.nx))
-        #Lambda = cp.Parameter()
         
-        #Sigma_hat_12_var.value = np.real(scipy.linalg.sqrtm(Sigma_hat))
         Sigma_w.value = Sigma_hat
         radi.value = theta
         x_cov.value = X_cov
         M_hat.value = M
-        #M_hat_12_var.value = np.real(scipy.linalg.sqrtm(M))
         P_var.value = P_t1 # P[t+1]
         S_var.value = S_t1 # S[t+1]
-        #Lambda.value = Lambda_
         
         #use Schur Complements
         #obj function
@@ -233,9 +221,6 @@ class DRCE:
                 cp.bmat([[Sigma_w, Y],
                          [Y.T, Sigma_wc]
                          ]) >> 0,
-                # cp.bmat([[Sigma_hat_12_var @ Sigma_wc @ Sigma_hat_12_var, Y],
-                #         [Y, np.eye(self.nx)]
-                #         ]) >> 0,
                 X_pred == self.A @ x_cov @ self.A.T + Sigma_wc,
                 cp.bmat([[X_pred-V, X_pred @ self.C.T],
                         [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_test]
@@ -245,9 +230,6 @@ class DRCE:
                 cp.bmat([[M_hat, N],
                          [N.T, M_test]
                          ]) >> 0,
-                # cp.bmat([[M_hat_12_var @ M_test @ M_hat_12_var, N],
-                #         [N, np.eye(self.ny)]
-                #         ]) >> 0,
                 N>>0
                 ]
         
@@ -321,24 +303,19 @@ class DRCE:
         S_xx_opt = X0.value
         S_xy_opt = X0.value @ self.C.T
         S_yy_opt = self.C @ X0.value @ self.C.T + M0.value
-        # print(S_xx_opt.shape)
-        # print(S_xy_opt.shape)
-        # print(S_yy_opt.shape)
-        #S_opt = S.value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, cost
+    
     #DR Kalman FILTER !!!!!!!!!!!!!!!!!!!!!!!!
     def DR_kalman_filter(self, v_mean_hat, M_hat, x, y, S_xx, S_xy, S_yy, mu_w=None, u = None):
         if u is None:
             #Initial state estimate
             x_ = x
             y_ = self.C @ x 
-            #y_ = self.C @ x
         else:
             #Prediction step
             x_ = self.A @ x + self.B @ u + mu_w
             y_ = self.C @ (self.A @ x + self.B @ u + mu_w) + v_mean_hat
-            #y_ = self.C @ (self.A @ x + self.B @ u + mu_w)
         
         x_new = S_xy @ np.linalg.inv(S_yy) @ (y - y_) + x_
         return x_new
@@ -356,9 +333,7 @@ class DRCE:
         #Performs state estimation based on the current state estimate, control input and new observation
         S_xx, S_xy, S_yy, cost = self.solve_DR_sdp_initial(M_hat, X_cov)
         
-        X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
-        #print(np.linalg.matrix_rank(X_cov_new))
-        #print(np.linalg.eigvals(X_cov_new))
+        X_cov_new = S_xx
         return X_cov_new, S_xx, S_xy, S_yy, cost
     
     def riccati(self, Phi, P, S, r, z, Sigma_hat, mu_hat, lambda_, t):
@@ -391,8 +366,6 @@ class DRCE:
         return obs
 
     def backward(self):
-        #Compute P, S, r, z, K and L, as well as the worst-case distribution parameters H, h and g backward in time
-        #\bar{w}_t^* = H[t] \bar{x}_t + h[t], \Sigma_t^* = g[t]
 
         self.P[self.T] = self.Qf
         if self.lambda_ <= np.max(np.linalg.eigvals(self.P[self.T])) or self.lambda_<= np.max(np.linalg.eigvals(self.P[self.T] + self.S[self.T])):
@@ -414,7 +387,6 @@ class DRCE:
             print("DRCE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
             
-            #print('old:', self.g[t], 'new:', sigma_wc[t])
 
     def forward(self):
         #Apply the controller forward in time.

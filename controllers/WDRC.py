@@ -57,10 +57,9 @@ class WDRC:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
         
         
-        print("WDRC ", self.dist, " / ", self.noise_dist, " / theta_w : ", self.theta_w)
+        print("WDRC ", self.dist, " / ", self.noise_dist)
         
-#        self.lambda_ = 3.5
-        #self.binarysearch_infimum_penalty_finite()
+        
         self.P = np.zeros((self.T+1, self.nx, self.nx))
         self.S = np.zeros((self.T+1, self.nx, self.nx))
         self.r = np.zeros((self.T+1, self.nx, 1))
@@ -78,12 +77,10 @@ class WDRC:
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
-        #optimal_penalty = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='nelder-mead', options={'xatol': 1e-6, 'disp': False, 'maxiter':10000}).x[0]
         
         #output = minimize(self.objective, x0=np.array([10* self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 10000, 'disp': False, 'maxiter': 10000, 'ftol': 1e-6, 'gtol': 1e-6, 'maxls': 20})
         output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 100000, 'disp': False, 'maxiter': 100000})  
         optimal_penalty = output.x[0]
-        #optimal_penalty = 2* self.infimum_penalty
         print("WDRC Optimal penalty (lambda_star) :", optimal_penalty, " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
 
@@ -96,7 +93,6 @@ class WDRC:
         z_tilde = np.zeros((self.T+1, 1))
 
         if np.max(np.linalg.eigvals(P)) > penalty:
-        #or np.max(np.linalg.eigvals(P + S)) > penalty:
                 return np.inf
         if penalty < 0:
             return np.inf
@@ -206,9 +202,6 @@ class WDRC:
             obj = cp.Maximize(cp.trace((P_var - lambda_*np.eye(self.nx)) @ Sigma) + 2*lambda_*cp.trace(Y) + cp.trace(S_var @ X))
             
             constraints = [
-                    # cp.bmat([[Sigma_hat_12_var @ Sigma @ Sigma_hat_12_var, Y],
-                    #          [Y, np.eye(self.nx)]
-                    #          ]) >> 0,
                     cp.bmat([[Sigma_hat, Y],
                          [Y.T, Sigma]
                          ]) >> 0,
@@ -230,10 +223,6 @@ class WDRC:
         params = sdp_prob.parameters()
         params[0].value = P
         params[1].value = S
-#        params[2].value = np.linalg.cholesky(Sigma_hat)
-        #params[2].value = np.real(scipy.linalg.sqrtm(Sigma_hat+ 1e-6*np.eye(self.nx)))
-        #params[2].value = np.real(scipy.linalg.sqrtm(Sigma_hat))
-        #params[2].value = Sigma_hat + 1e-7*np.eye(self.nx)
         params[2].value = Sigma_hat
         params[3].value = x_cov
         
@@ -262,19 +251,12 @@ class WDRC:
         if u is None:
             #Initial state estimate
             x_ = x
-#            P_ = P
         else:
             #Prediction update
             x_ = self.A @ x + self.B @ u + mu_w
-#            P_ = self.A @ P @ self.A.T + P_w
 
         #Measurement update
         resid = y - (self.C @ x_ + v_mean_hat) 
-
-#        temp = np.linalg.solve(self.C @ P_ @ self.C.T + self.M, self.C @ P_)
-#        P_new = P_ - P_ @ self.C.T @ temp
-        #x_new = x_ + P @ self.C.T @ np.linalg.inv(M_hat) @ resid
-        #P_ = self.C @ P @ self.C.T + M_hat
         temp = np.linalg.solve(M_hat, resid)
         x_new = x_ + P @ self.C.T @ temp
         return x_new
@@ -308,8 +290,6 @@ class WDRC:
         return obs
 
     def backward(self):
-        #Compute P, S, r, z, K and L, as well as the worst-case distribution parameters H, h and g backward in time
-        #\bar{w}_t^* = H[t] \bar{x}_t + h[t], \Sigma_t^* = g[t]
 
         self.P[self.T] = self.Qf
         if self.lambda_ <= np.max(np.linalg.eigvals(self.P[self.T])) or self.lambda_<= np.max(np.linalg.eigvals(self.P[self.T] + self.S[self.T])):
@@ -327,17 +307,10 @@ class WDRC:
             print("WDRC Offline step : ",t,"/",self.T)
             sdp_prob = self.gen_sdp(self.lambda_, self.M_hat[t])
             sigma_wc[t], _, status = self.solve_sdp(sdp_prob, self.x_cov[t], self.P[t+1], self.S[t+1], self.Sigma_hat[t])
-            #print("sigma_wc[t] norm : ", np.linalg.norm(sigma_wc[t]))
             if status in ["infeasible", "unbounded"]:
                 print(status, 'False!!!!!!!!!!!!!')
             self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], sigma_wc[t])
             
-            #print("x_cov[] norm : ", np.linalg.norm(self.x_cov[t+1]))
-
-#            if np.min(self.C @ (self.A @ x_cov[t] @ self.A + sigma_wc[t]) @ self.C.T + self.M) < 0:
-#                print('False!!!!!!!!!!!!!')
-#                break
-            #print('old:', self.g[t], 'new:', sigma_wc[t])
 
     def forward(self):
         #Apply the controller forward in time.

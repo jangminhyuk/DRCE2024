@@ -86,17 +86,8 @@ def gen_sample_dist_inf(dist, N_sample, mu_w=None, Sigma_w=None, w_max=None, w_m
         
     mean_ = np.average(w, axis = 1)[...,np.newaxis]
     var_ = np.cov(w)
-#    var_ = np.diag(np.diag(var_))
     return mean_, var_
 
-# def create_matrices(nx, ny, nu):
-#     A = np.load("./inputs/A.npy") # (n x n) matrix
-#     B = np.load("./inputs/B.npy")
-#     C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-# #    C = np.hstack([np.zeros((ny, nx-ny)), np.eye(ny, ny)])
-# #    C = np.eye(ny)
-
-#     return A, B, C
 
 def save_data(path, data):
     output = open(path, 'wb')
