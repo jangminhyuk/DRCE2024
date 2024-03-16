@@ -53,8 +53,6 @@ def multimodal(mu, Sigma, N=1):
             x[:,:,i] = mu[i]
         else:
             x[:,:,i] = mu[i] + np.linalg.cholesky(Sigma[i]) @ w.T
-
-    #w = np.random.choice([0, 1], size=(n,N))
     w = 0.5
     y = x[:,:,0]*w + x[:,:,1]*(1-w)
     return y
@@ -86,17 +84,8 @@ def gen_sample_dist_inf(dist, N_sample, mu_w=None, Sigma_w=None, w_max=None, w_m
         
     mean_ = np.average(w, axis = 1)[...,np.newaxis]
     var_ = np.cov(w)
-#    var_ = np.diag(np.diag(var_))
     return mean_, var_
 
-# def create_matrices(nx, ny, nu):
-#     A = np.load("./inputs/A.npy") # (n x n) matrix
-#     B = np.load("./inputs/B.npy")
-#     C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-# #    C = np.hstack([np.zeros((ny, nx-ny)), np.eye(ny, ny)])
-# #    C = np.eye(ny)
-
-#     return A, B, C
 
 def save_data(path, data):
     output = open(path, 'wb')
@@ -124,11 +113,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #----------------------------
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot results
     
-    #theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
-    #lambda_list = [5, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
-    lambda_list = [6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-    
+    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
     for noise_dist in noisedist:

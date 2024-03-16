@@ -115,7 +115,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     B = C = Q = R = np.eye(10) 
     Qf = np.zeros((10,10))
     #----------------------------
-    # HERE!! change 1 to 0 if you don't want to use given lambda
+    # change 1 to 0 if you don't want to use given lambda
     use_lambda = 1
     
     #theta_v_list = [1.0, 1.2, 1.4, 1.6, 2.0]
@@ -195,7 +195,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     #-------Estimate the nominal distribution-------
                     # Nominal Disturbance distribution
                     mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                    
                     # Nominal Noise distribution
                     v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
                     
@@ -209,7 +208,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     output_wdrc_list = []
                     output_drce_list = []
                     #Initialize controllers
-                    
                     
                     drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, use_lambda)
                     wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda)
@@ -264,9 +262,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     np.random.seed(seed) # fix Random seed!
                     print("Running LQG Forward step ...")
                     for i in range(num_sim):
+                        
+                        #Perform state estimation and apply the controller
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
-                
                         print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                         
                     J_LQG_list = []
@@ -311,7 +310,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         save_data(path + 'wdrc.pkl', J_WDRC_mean)
                         save_data(path + 'lqg.pkl', J_LQG_mean)
                 
-                        #Summarize and plot the results
                         print('\n-------Summary-------')
                         print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                         
@@ -333,6 +331,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     print('\n-------Summary-------')
                     print("dist : ", dist, "noise_dist : ", noise_dist, "/ num_disturbance_samples : ", num_samples, "/ theta_v : ", theta, " / noise sample effect PLOT / Seed : ",seed)
                     
+                    # reset
+                    output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
+                    output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
     print("Data generation Completed!!")
     print("Use plot_J.py to draw noise_sample_size effect plot")
             

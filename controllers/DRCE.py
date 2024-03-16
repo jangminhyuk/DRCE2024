@@ -208,7 +208,7 @@ class DRCE:
         Sigma_w.value = Sigma_hat
         radi.value = theta
         x_cov.value = X_cov
-        M_hat.value = M
+        M_hat.value = M # Noise covariance
         P_var.value = P_t1 # P[t+1]
         S_var.value = S_t1 # S[t+1]
         
@@ -299,14 +299,13 @@ class DRCE:
         if prob.status in ["infeasible", "unbounded"]:
             print(prob.status, 'False in DRKF combined initial!!!!!!!!!!!!!')
         
-        
         S_xx_opt = X0.value
         S_xy_opt = X0.value @ self.C.T
         S_yy_opt = self.C @ X0.value @ self.C.T + M0.value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, cost
     
-    #DR Kalman FILTER !!!!!!!!!!!!!!!!!!!!!!!!
+    #DR Kalman FILTER !
     def DR_kalman_filter(self, v_mean_hat, M_hat, x, y, S_xx, S_xy, S_yy, mu_w=None, u = None):
         if u is None:
             #Initial state estimate

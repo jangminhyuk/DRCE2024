@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt
 import argparse
 import pickle
 
-def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drkf_wdrc, std_cost_drkf_wdrc, dist, noise_dist, path):
+def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, dist, noise_dist, path):
 
     t = np.array([5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40])
     
     J_lqr_mean = np.array(avg_cost_lqg[0:])
     J_wdrc_mean = np.array(avg_cost_wdrc[0:])
-    J_drkf_wdrc_mean = np.array(avg_cost_drkf_wdrc[0:])
+    J_drce_mean = np.array(avg_cost_drce[0:])
     
     J_lqr_std = np.array(std_cost_lqg[0:])
     J_wdrc_std = np.array(std_cost_wdrc[0:])
-    J_drkf_wdrc_std = np.array(std_cost_drkf_wdrc[0:])
+    J_drce_std = np.array(std_cost_drce[0:])
     
     
     fig = plt.figure(figsize=(6,4), dpi=300)
@@ -29,8 +29,8 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     plt.plot(t, J_wdrc_mean, 'tab:blue', label='WDRC')
     plt.fill_between(t, J_wdrc_mean + 0.25*J_wdrc_std, J_wdrc_mean - 0.25*J_wdrc_std, facecolor='tab:blue', alpha=0.3)
     
-    plt.plot(t, J_drkf_wdrc_mean, 'tab:green', label='DRCE')
-    plt.fill_between(t, J_drkf_wdrc_mean + 0.25*J_drkf_wdrc_std, J_drkf_wdrc_mean - 0.25*J_drkf_wdrc_std, facecolor='tab:green', alpha=0.3)
+    plt.plot(t, J_drce_mean, 'tab:green', label='DRCE')
+    plt.fill_between(t, J_drce_mean + 0.25*J_drce_std, J_drce_mean - 0.25*J_drce_std, facecolor='tab:green', alpha=0.3)
     
     plt.xlabel(r'Sample Size', fontsize=16)
     plt.ylabel(r'Total Cost', fontsize=16)
