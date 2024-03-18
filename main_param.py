@@ -95,10 +95,11 @@ def save_data(path, data):
 def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results):
     
     lambda_ = 10
-    seed = 2024 # any value
+    seed = 2024 # Random seed
     noisedist = [noise_dist1]
     num_noise_list = [num_noise_samples]
-    theta_w = 1.0 # will not be used !!!
+    theta_w = 1.0 # will not be used for this file!!!
+    
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
@@ -111,8 +112,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     B = C = Q = R = np.eye(10) 
     Qf = np.zeros((10,10))
     #----------------------------
-    # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot results
-    
+    # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     theta_x0 = 0.5 # radius of initial state ambiguity set
@@ -130,7 +130,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if not os.path.exists(path):
                         os.makedirs(path)
                 
-                    #-------Initialization-------
+                    #-------Disturbance distribution-------
                     if dist =="uniform":
                         #disturbance distribution parameters
                         w_max = 0.6*np.ones(nx)
@@ -144,10 +144,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
                     elif dist == "normal":
-                        
+                        #disturbance distribution parameters
                         w_max = None
                         w_min = None
-
                         mu_w = 0.1*np.ones((nx, 1))
                         Sigma_w= 0.1*np.eye(nx)
                         #initial state distribution parameters
@@ -156,6 +155,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_mean = np.zeros((nx,1))
                         x0_cov = 0.01*np.eye(nx)
                     elif dist == "quadratic":
+                        #disturbance distribution parameters
                         w_max = 0.2*np.ones(nx)
                         w_min = -0.1*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
@@ -171,7 +171,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         v_min = -0.5*np.ones(ny)
                         v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 1/12*np.diag((v_max - v_min)**2)
+                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                     elif noise_dist =="normal":
                         v_max = None
                         v_min = None
@@ -181,7 +181,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         v_min = 0.0*np.ones(ny)
                         v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 3.0/20.0 *np.diag((v_max-v_min)**2)
+                        M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                         
                         
                     #-------Estimate the nominal distribution-------
@@ -190,7 +190,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     
                     # Nominal Noise distribution
                     v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                    
                     M_hat = M_hat + 1e-6*np.eye(ny) # to prevent numerical error
                     
                     #-------Create a random system-------

@@ -96,12 +96,8 @@ def save_data(path, data):
 
 def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     noise_plot_results = True
-    lambda_ = 10
-    seed = 2024 # any value
-    if noise_plot_results: # if you need to draw plot_J
-        num_noise_list = [5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40]
-    else:
-        num_noise_list = [num_noise_samples]
+    seed = 2024 # Random seed !  any value
+    num_noise_list = [5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40]
     
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
@@ -117,10 +113,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     #----------------------------
     # change 1 to 0 if you don't want to use given lambda
     use_lambda = 1
+    lambda_ = 10
     
-    #theta_v_list = [1.0, 1.2, 1.4, 1.6, 2.0]
     theta_v_list = [2.0]
-    #theta_w_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
     theta_w_list = [2.0] # theta_w have no effect if use set use_lambda = 1
     noisedist = [noise_dist1]
     theta_x0 = 0.5 # radius of initial state ambiguity set
@@ -138,7 +133,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     if not os.path.exists(path):
                         os.makedirs(path)
                 
-                    #-------Initialization-------
+                    #-------Disturbance Distribution-------
                     if dist =="uniform":
                         #disturbance distribution parameters
                         w_max = 0.3*np.ones(nx)
@@ -152,10 +147,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
                     elif dist == "normal":
-                        
+                        #disturbance distribution parameters
                         w_max = None
                         w_min = None
-
                         mu_w = 0.1*np.ones((nx, 1))
                         Sigma_w= 0.1*np.eye(nx)
                         #initial state distribution parameters
@@ -164,6 +158,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         x0_mean = np.zeros((nx,1))
                         x0_cov = 0.01*np.eye(nx)
                     elif dist == "quadratic":
+                        #disturbance distribution parameters
                         w_max = 0.2*np.ones(nx)
                         w_min = -0.1*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
@@ -179,7 +174,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         v_min = -0.5*np.ones(ny)
                         v_max = 0.5*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 1/12*np.diag((v_max - v_min)**2)
+                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                     elif noise_dist =="normal":
                         v_max = None
                         v_min = None
@@ -189,7 +184,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         v_min = 0.0*np.ones(ny)
                         v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 3.0/20.0 *np.diag((v_max-v_min)**2)
+                        M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                         
                         
                     #-------Estimate the nominal distribution-------
@@ -197,7 +192,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
                     # Nominal Noise distribution
                     v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                    
                     M_hat = M_hat + 1e-6*np.eye(ny) # to prevent numerical error
                     
                     #-------Create a random system-------
@@ -207,8 +201,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     output_lqg_list = []
                     output_wdrc_list = []
                     output_drce_list = []
-                    #Initialize controllers
                     
+                    #Initialize controllers
                     drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, use_lambda)
                     wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda)
                     lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat)
