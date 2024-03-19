@@ -9,7 +9,7 @@ import scipy
 
 # Distributionally Robust Control and Estimation
 class DRCE:
-    def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda):
+    def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
@@ -19,8 +19,10 @@ class DRCE:
         self.nx = self.B.shape[0]
         self.nu = self.B.shape[1]
         self.ny = self.C.shape[0]
-        self.x0_mean = x0_mean
-        self.x0_cov = x0_cov
+        self.x0_mean = x0_mean # true
+        self.x0_cov = x0_cov # true
+        self.x0_mean_hat = x0_mean_hat
+        self.x0_cov_hat = x0_cov_hat
         self.mu_hat = mu_hat
         self.Sigma_hat = Sigma_hat
         self.mu_w = mu_w
@@ -55,13 +57,13 @@ class DRCE:
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
         self.lambda_ = lambda_
-        
+        print("DRCE")
         if use_lambda==1: # Use given Lambda!!
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
             
-        print("DRCE")
+        
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))
         self.S = np.zeros((self.T+1, self.nx, self.nx))
@@ -78,7 +80,8 @@ class DRCE:
         # Find inf_penalty (infimum value of penalty coefficient satisfying Assumption)
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
-        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 100000, 'disp': False, 'maxiter': 100000})
+        print("Optimizing lambda . . . Please wait for a while")
+        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})
         optimal_penalty = output.x[0]
         print("DRCE Optimal penalty (lambda_star):", optimal_penalty)
         return optimal_penalty
@@ -115,12 +118,12 @@ class DRCE:
         #print(self.v_mean_hat[0])
           
         #x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov)
-        x_cov[0], S_xx[0], S_xy[0], S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov)
+        x_cov[0], S_xx[0], S_xy[0], S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
         for t in range(0, self.T-1):
             x_cov[t+1], S_xx[t+1], S_xy[t+1], S_yy[t+1], sigma_wc[t], z_tilde[t] = self.DR_kalman_filter_cov(P[t+1], S[t+1], self.M_hat[t+1], x_cov[t], self.Sigma_hat[t], penalty)
         
         y = self.get_obs(self.x0_init, self.true_v_init)
-        x0_mean = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean, y, S_xx[0], S_xy[0], S_yy[0]) #initial state estimation
+        x0_mean = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean_hat, y, S_xx[0], S_xy[0], S_yy[0]) #initial state estimation
         return penalty*self.T*self.theta_w**2 + (x0_mean.T @ P[0] @ x0_mean)[0][0] + 2*(r[0].T @ x0_mean)[0][0] + z[0][0] + np.trace((P[0] + S[0]) @ x_cov[0]) + z_tilde.sum()
 
     def binarysearch_infimum_penalty_finite(self):
@@ -190,10 +193,10 @@ class DRCE:
     def solve_DR_sdp(self, P_t1, S_t1, M, X_cov, Sigma_hat, theta, Lambda_):
         #construct problem
         #Variables
-        V = cp.Variable((self.nx, self.nx))
+        V = cp.Variable((self.nx, self.nx), symmetric=True)
         Y = cp.Variable((self.nx,self.nx))
         Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True)
-        N = cp.Variable((self.ny, self.ny), symmetric=True)
+        Z = cp.Variable((self.ny, self.ny))
         X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
         M_test = cp.Variable((self.ny, self.ny), symmetric=True)
         
@@ -226,11 +229,14 @@ class DRCE:
                         [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_test]
                         ]) >> 0 ,
                 self.C @ X_pred @ self.C.T + M_test >>0,
-                cp.trace(M_hat + M_test - 2*N ) <= radi**2,
-                cp.bmat([[M_hat, N],
-                         [N.T, M_test]
+                cp.trace(M_hat + M_test - 2*Z ) <= radi**2,
+                cp.bmat([[M_hat, Z],
+                         [Z.T, M_test]
                          ]) >> 0,
-                N>>0
+                V>>0,
+                X_pred >>0,
+                M_test >>0,
+                Sigma_wc >>0
                 ]
         
         prob = cp.Problem(obj, constraints)
@@ -255,11 +261,11 @@ class DRCE:
         X0 = cp.Variable((self.nx, self.nx), symmetric=True) # prediction
         X = cp.Variable((self.nx, self.nx), symmetric=True)
         M0 = cp.Variable((self.ny, self.ny), symmetric=True)
-        N = cp.Variable((self.ny, self.ny), symmetric=True)
-        K = cp.Variable((self.nx, self.nx), symmetric=True)
+        Z = cp.Variable((self.ny, self.ny))
+        Y = cp.Variable((self.nx, self.nx))
 
         X0_hat = cp.Parameter((self.nx, self.nx))
-        M0_hat = cp.Parameter((self.ny, self.ny))
+        M0_hat = cp.Parameter((self.ny, self.ny)) # nominal noise covariance
         theta_x0 = cp.Parameter(nonneg=True)
         theta_v0 = cp.Parameter(nonneg=True)
         
@@ -277,19 +283,19 @@ class DRCE:
                 cp.bmat([[X0-X, X0 @ self.C.T],
                         [self.C @ X0, self.C @ X0 @ self.C.T + M0]
                         ]) >> 0 ,
-                cp.trace(M0_hat + M0 - 2*N ) <= theta_v0**2,
-                cp.bmat([[M0_hat, N],
-                         [N.T, M0]
+                cp.trace(M0_hat + M0 - 2*Z ) <= theta_v0**2,
+                cp.bmat([[M0_hat, Z],
+                         [Z.T, M0]
                          ]) >> 0,
-                cp.trace(X0_hat + X0 - 2*K ) <= theta_x0**2,
-                cp.bmat([[X0_hat, K],
-                         [K.T, X0]
+                cp.trace(X0_hat + X0 - 2*Y ) <= theta_x0**2,
+                cp.bmat([[X0_hat, Y],
+                         [Y.T, X0]
                          ]) >> 0,
                 X>>0,
                 X0>>0,
                 M0>>0,
-                N>>0,
-                K>>0
+                #N>>0,
+                #K>>0
                 ]
         
         prob = cp.Problem(obj, constraints)
@@ -381,7 +387,7 @@ class DRCE:
         self.S_yy = np.zeros((self.T+1, self.ny, self.ny))
         self.sigma_wc = np.zeros((self.T, self.nx, self.nx))
         #print(self.v_mean_hat[0])
-        self.x_cov[0], self.S_xx[0], self.S_xy[0], self.S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov)
+        self.x_cov[0], self.S_xx[0], self.S_xy[0], self.S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
         for t in range(self.T):
             print("DRCE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
@@ -416,7 +422,7 @@ class DRCE:
                 
         y[0] = self.get_obs(x[0], true_v) #initial observation
         
-        x_mean[0] = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean, y[0], self.S_xx[0], self.S_xy[0], self.S_yy[0]) #initial state estimation
+        x_mean[0] = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean_hat, y[0], self.S_xx[0], self.S_xy[0], self.S_yy[0]) #initial state estimation
 
         for t in range(self.T):
             mu_wc[t] = self.H[t] @ x_mean[t] + self.h[t] #worst-case mean

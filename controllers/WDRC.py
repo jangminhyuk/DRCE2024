@@ -8,7 +8,7 @@ import cvxpy as cp
 import scipy
 
 class WDRC:
-    def __init__(self, lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda):
+    def __init__(self, lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
@@ -18,8 +18,10 @@ class WDRC:
         self.nx = self.B.shape[0]
         self.nu = self.B.shape[1]
         self.ny = self.C.shape[0]
-        self.x0_mean = x0_mean
+        self.x0_mean = x0_mean 
         self.x0_cov = x0_cov
+        self.x0_mean_hat = x0_mean_hat
+        self.x0_cov_hat = x0_cov_hat
         self.mu_hat = mu_hat
         self.Sigma_hat = Sigma_hat
         self.mu_w = mu_w
@@ -51,13 +53,12 @@ class WDRC:
         elif self.noise_dist=="quadratic":
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
             
+        print("WDRC ", self.dist, " / ", self.noise_dist)    
         if use_lambda==1:
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
         
-        
-        print("WDRC ", self.dist, " / ", self.noise_dist)
         
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))
@@ -77,9 +78,8 @@ class WDRC:
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
-        
-        #output = minimize(self.objective, x0=np.array([10* self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 10000, 'disp': False, 'maxiter': 10000, 'ftol': 1e-6, 'gtol': 1e-6, 'maxls': 20})
-        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 100000, 'disp': False, 'maxiter': 100000})  
+        print("Optimizing lambda . . . Please wait for a while")
+        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})  
         optimal_penalty = output.x[0]
         print("WDRC Optimal penalty (lambda_star) :", optimal_penalty, " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
@@ -111,8 +111,8 @@ class WDRC:
         sigma_wc = np.zeros((self.T, self.nx, self.nx))
         y = self.get_obs(self.x0_init, self.true_v_init)
         #y[0] = self.get_obs(x[0], true_v)
-        x0_mean = self.kalman_filter(self.v_mean_hat[0],self.M_hat[0], self.x0_mean, self.x0_cov, y) #initial state estimation
-        x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov)
+        x0_mean = self.kalman_filter(self.v_mean_hat[0],self.M_hat[0], self.x0_mean_hat, self.x0_cov_hat, y) #initial state estimation
+        x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
         for t in range(0, self.T-1):
             x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t], x_cov[t], sigma_wc[t])
             sdp_prob = self.gen_sdp(penalty, self.M_hat[t])
@@ -189,7 +189,7 @@ class WDRC:
     
     def gen_sdp(self, lambda_, M_hat):
             Sigma = cp.Variable((self.nx,self.nx), symmetric=True)
-            Y = cp.Variable((self.nx,self.nx), symmetric=True)
+            Y = cp.Variable((self.nx,self.nx))
             X = cp.Variable((self.nx,self.nx), symmetric=True)
             X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
         
@@ -212,7 +212,7 @@ class WDRC:
                             ]) >> 0,        
                     X_pred == self.A @ X_bar @ self.A.T + Sigma,
                     self.C @ X_pred @ self.C.T + M_hat >> 0,
-                    Y >> 0,
+                    #Y >> 0,
                     X >> 0
                     ]
             prob = cp.Problem(obj, constraints)
@@ -302,7 +302,7 @@ class WDRC:
         self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
         sigma_wc = np.zeros((self.T, self.nx, self.nx))
         #print(self.v_mean_hat[0])
-        self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov)
+        self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
         for t in range(self.T):
             print("WDRC Offline step : ",t,"/",self.T)
             sdp_prob = self.gen_sdp(self.lambda_, self.M_hat[t])
@@ -340,7 +340,7 @@ class WDRC:
             true_v = self.quadratic(self.v_max, self.v_min) #observation noise
             
         y[0] = self.get_obs(x[0], true_v) #initial observation
-        x_mean[0] = self.kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean, self.x_cov[0], y[0]) #initial state estimation
+        x_mean[0] = self.kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean_hat, self.x_cov[0], y[0]) #initial state estimation
 
         for t in range(self.T):
             mu_wc[t] = self.H[t] @ x_mean[t] + self.h[t] #worst-case mean

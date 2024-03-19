@@ -94,11 +94,14 @@ def save_data(path, data):
     pickle.dump(data, output)
     output.close()
 
-def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
-    noise_plot_results = True
+def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results, noise_plot_results):
+    #noise_plot_results = True
     seed = 2024 # Random seed !  any value
-    num_noise_list = [5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40]
-    
+    if noise_plot_results:
+        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
+    else:
+        num_noise_list = [num_noise_samples]
+    num_x0_samples = 10 # 10 x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
@@ -108,15 +111,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     ny = 10#output dimension
     temp = np.ones((nx, nx))
     A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
-    B = C = Q = R = np.eye(10) 
-    Qf = np.zeros((10,10))
+    B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
     # change 1 to 0 if you don't want to use given lambda
-    use_lambda = 1
-    lambda_ = 10
+    use_lambda = 0
+    lambda_ = 10 # will not be used if the parameter "use_lambda = 0"
     
-    theta_v_list = [2.0]
-    theta_w_list = [2.0] # theta_w have no effect if use set use_lambda = 1
+    theta_v_list = [1.5] # radius of noise ambiguity set
+    theta_w_list = [1.5] # theta_w have no effect if use set use_lambda = 1
     noisedist = [noise_dist1]
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
@@ -141,8 +143,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 1/12*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 0.05*np.ones(nx)
-                        x0_min = -0.05*np.ones(nx)
+                        x0_max = 0.2*np.ones(nx)
+                        x0_min = -0.1*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
@@ -155,8 +157,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = np.zeros((nx,1))
-                        x0_cov = 0.01*np.eye(nx)
+                        x0_mean = 0.1*np.zeros((nx,1))
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
                         w_max = 0.2*np.ones(nx)
@@ -164,7 +166,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 0.1*np.ones(nx)
+                        x0_max = 0.2*np.ones(nx)
                         x0_min = -0.1*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
@@ -188,11 +190,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         
                         
                     #-------Estimate the nominal distribution-------
+                    # Nominal initial state distribution
+                    x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
                     # Nominal Disturbance distribution
                     mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
                     # Nominal Noise distribution
                     v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                    M_hat = M_hat + 1e-6*np.eye(ny) # to prevent numerical error
+                    M_hat = M_hat + 1e-6*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
                     
                     #-------Create a random system-------
                     system_data = (A, B, C, Q, Qf, R, M)
@@ -203,9 +207,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     output_drce_list = []
                     
                     #Initialize controllers
-                    drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, use_lambda)
-                    wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, use_lambda)
-                    lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat)
+                    drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                    wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                    lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
                 
                     wdrc.backward()
                     drce.backward()
@@ -223,15 +227,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     
                         print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     
-                    J_DRCE_list = []
-                    for out in output_drce_list:
-                        J_DRCE_list.append(out['cost'])
-                    J_DRCE_mean= np.mean(J_DRCE_list, axis=0)
-                    J_DRCE_std = np.std(J_DRCE_list, axis=0)
-                    output_J_DRCE_mean.append(J_DRCE_mean[0])
-                    output_J_DRCE_std.append(J_DRCE_std[0])
-                    print(" Average cost (DRCE) : ", J_DRCE_mean[0])
-                    print(" std (DRCE) : ", J_DRCE_std[0])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -243,15 +238,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         output_wdrc_list.append(output_wdrc)
                         print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
-                    J_WDRC_list = []
-                    for out in output_wdrc_list:
-                        J_WDRC_list.append(out['cost'])
-                    J_WDRC_mean= np.mean(J_WDRC_list, axis=0)
-                    J_WDRC_std = np.std(J_WDRC_list, axis=0)
-                    output_J_WDRC_mean.append(J_WDRC_mean[0])
-                    output_J_WDRC_std.append(J_WDRC_std[0])
-                    print(" Average cost (WDRC) : ", J_WDRC_mean[0])
-                    print(" std (WDRC) : ", J_WDRC_std[0])
                     #----------------------------
                     np.random.seed(seed) # fix Random seed!
                     print("Running LQG Forward step ...")
@@ -261,54 +247,58 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
                         print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
-                        
-                    J_LQG_list = []
-                    for out in output_lqg_list:
-                        J_LQG_list.append(out['cost'])
-                    J_LQG_mean= np.mean(J_LQG_list, axis=0)
-                    J_LQG_std = np.std(J_LQG_list, axis=0)
-                    output_J_LQG_mean.append(J_LQG_mean[0])
-                    output_J_LQG_std.append(J_LQG_std[0])
-                    print(" Average cost (LQG) : ", J_LQG_mean[0])
-                    print(" std (LQG) : ", J_LQG_std[0])
+                    
                     
                 
                     if noise_plot_results:
                         J_LQG_list, J_WDRC_list, J_DRCE_list= [], [], []
                         
-                        #lqg
+                        #lqg-----------------------
                         for out in output_lqg_list:
                             J_LQG_list.append(out['cost'])
                             
                         J_LQG_mean= np.mean(J_LQG_list, axis=0)
                         J_LQG_std = np.std(J_LQG_list, axis=0)
+                        output_J_LQG_mean.append(J_LQG_mean[0])
+                        output_J_LQG_std.append(J_LQG_std[0])
+                        print(" Average cost (LQG) : ", J_LQG_mean[0])
+                        print(" std (LQG) : ", J_LQG_std[0])
                         
-                        #wdrc
+                        #wdrc-----------------------
                         for out in output_wdrc_list:
                             J_WDRC_list.append(out['cost'])
                             
                         J_WDRC_mean= np.mean(J_WDRC_list, axis=0)
                         J_WDRC_std = np.std(J_WDRC_list, axis=0)
-
-                        #drce
+                        output_J_WDRC_mean.append(J_WDRC_mean[0])
+                        output_J_WDRC_std.append(J_WDRC_std[0])
+                        print(" Average cost (WDRC) : ", J_WDRC_mean[0])
+                        print(" std (WDRC) : ", J_WDRC_std[0])
+                        
+                        #drce---------------------
                         for out in output_drce_list:
                             J_DRCE_list.append(out['cost'])
                             
                         J_DRCE_mean= np.mean(J_DRCE_list, axis=0)
                         J_DRCE_std = np.std(J_DRCE_list, axis=0)
+                        output_J_DRCE_mean.append(J_DRCE_mean[0])
+                        output_J_DRCE_std.append(J_DRCE_std[0])
+                        print(" Average cost (DRCE) : ", J_DRCE_mean[0])
+                        print(" std (DRCE) : ", J_DRCE_std[0])
                         
                         print("num_noise_sample : ", num_noise, " / finished with dist : ", dist, "/ noise_dist : ", noise_dist, "/ seed : ", seed)
                     else:
-                        
-                        save_data(path + 'drce.pkl', J_DRCE_mean)
-                        save_data(path + 'wdrc.pkl', J_WDRC_mean)
-                        save_data(path + 'lqg.pkl', J_LQG_mean)
+                        path = "./results/{}_{}/finite/multiple/".format(dist, noise_dist)
+                        if not os.path.exists(path):
+                            os.makedirs(path)
+                        save_data(path + 'drce.pkl', output_drce_list)
+                        save_data(path + 'wdrc.pkl', output_wdrc_list)
+                        save_data(path + 'lqg.pkl', output_lqg_list)
                 
                         print('\n-------Summary-------')
                         print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                         
                         
-                
                 # after running noise_samples lists!
                 if noise_plot_results:
                     path = "./results/{}_{}/finite/multiple/num_noise_plot/".format(dist, noise_dist)
@@ -328,8 +318,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
                     # reset
                     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
                     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
+                    
     print("Data generation Completed!!")
-    print("Use plot_J.py to draw noise_sample_size effect plot")
+    
+    if noise_plot_results:
+        print("For noise sample size effect plot : Use plot_J.py")
+    else:
+        print("For plot : Use plot.py to summarize this scenario")
+    
             
 
 if __name__ == "__main__":
@@ -340,7 +336,8 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
-
+    parser.add_argument('--plot', required=False, action="store_true") #plot results+
+    parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
+    
     args = parser.parse_args()
-    np.random.seed(100)
-    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon)
+    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.plot, args.noise_plot)

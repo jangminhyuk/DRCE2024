@@ -5,7 +5,7 @@ import numpy as np
 import time
 
 class LQG:
-    def __init__(self, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat):
+    def __init__(self, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
@@ -17,6 +17,8 @@ class LQG:
         self.ny = self.C.shape[0]
         self.x0_mean = x0_mean
         self.x0_cov = x0_cov
+        self.x0_mean_hat = x0_mean_hat
+        self.x0_cov_hat = x0_cov_hat
         self.mu_hat = mu_hat
         self.Sigma_hat = Sigma_hat
         self.mu_w = mu_w
@@ -137,7 +139,7 @@ class LQG:
              self.P[t], self.S[t], self.r[t], self.z[t], self.K[t], self.L[t]  = self.riccati(Phi, self.P[t+1], self.S[t+1], self.r[t+1], self.z[t+1], self.Sigma_hat[t], self.mu_hat[t])
         
         self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
-        self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov)
+        self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
         for t in range(self.T):
             self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t])
             
@@ -166,7 +168,7 @@ class LQG:
             true_v = self.quadratic(self.v_max, self.v_min) #observation noise
             
         y[0] = self.get_obs(x[0], true_v) #initial observation
-        x_mean[0] = self.kalman_filter(self.v_mean_hat[0] , self.M_hat[0], self.x0_mean, self.x_cov[0], y[0]) #initial state estimation
+        x_mean[0] = self.kalman_filter(self.v_mean_hat[0] , self.M_hat[0], self.x0_mean_hat, self.x_cov[0], y[0]) #initial state estimation
         
         for t in range(self.T):
             #disturbance sampling

@@ -9,7 +9,7 @@ import pickle
 
 def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, dist, noise_dist, path):
 
-    t = np.array([5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40])
+    t = np.array([5, 10, 15, 20, 25, 30, 35, 40])
     
     J_lqr_mean = np.array(avg_cost_lqg[0:])
     J_wdrc_mean = np.array(avg_cost_wdrc[0:])
