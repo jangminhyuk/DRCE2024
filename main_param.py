@@ -114,6 +114,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60] # disturbance distribution penalty parameter
+    #lambda_list = [6]
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
     for noise_dist in noisedist:
@@ -283,7 +284,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Now use plot_params.py to plot the results! Please make sure your lambda_list and theta_v_list in plot_prams.py is as desired")
+    print("Now use plot_params.py to plot the results! Please make sure your lambda_list and theta_v_list in plot_parms.py is as desired")
             
 
 if __name__ == "__main__":
