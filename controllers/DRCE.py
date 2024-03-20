@@ -88,6 +88,7 @@ class DRCE:
 
         optimal_penalty = output.x
         print("DRCE Optimal penalty (lambda_star):", optimal_penalty[0])
+        print(optimal_penalty)
         return optimal_penalty
 
     def objective(self, penalty):
@@ -210,7 +211,7 @@ class DRCE:
         #Parameters
         S_var = cp.Parameter((self.nx,self.nx), name='S_var')
         P_var = cp.Parameter((self.nx,self.nx), name='P_var')
-        Lambda_ = cp.Parameter( name='Lambda_')
+        Lambda_ = cp.Parameter(1, name='Lambda_')
         Sigma_w = cp.Parameter((self.nx, self.nx), name='Sigma_w') # nominal Sigma_w
         x_cov = cp.Parameter((self.nx, self.nx), name='x_cov') # x_cov from before time step
         M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')

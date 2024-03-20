@@ -197,7 +197,7 @@ class WDRC:
             X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
         
             P_var = cp.Parameter((self.nx,self.nx))
-            lambda_ = cp.Parameter()
+            lambda_ = cp.Parameter(1)
             S_var = cp.Parameter((self.nx,self.nx))
             #Sigma_hat_12_var = cp.Parameter((self.nx,self.nx))
             Sigma_hat = cp.Parameter((self.nx,self.nx))
