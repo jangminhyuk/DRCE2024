@@ -57,9 +57,10 @@ class WDRC:
         self.sdp_prob = self.gen_sdp()
 
         if use_lambda==True:
-            self.lambda_ = lambda_
+            self.lambda_ = np.array([lambda_])
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
+            #print(self.lambda_)
         
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))
