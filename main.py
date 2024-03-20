@@ -121,7 +121,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
         theta_w_list = [1.5]
-        theta_v_list = [2.5]
+        theta_v_list = [3.0]
     elif dist == "quadratic":
         theta_w_list = [2.0]
         theta_v_list = [2.0]
@@ -190,7 +190,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         v_max = None
                         v_min = None
                         M = 1.0*np.eye(ny) #observation noise covariance
-                        mu_v = 0.2*np.ones((ny, 1))
+                        mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -2.0*np.ones(ny)
                         v_max = 2.0*np.ones(ny)
@@ -331,9 +331,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     print("Data generation Completed!!")
     
     if noise_plot_results:
-        print("For noise sample size effect plot : Use plot_J.py --"+ dist + " --" + noise_dist)
+        print("For noise sample size effect plot : Use plot_J.py --dist"+ dist + " --noise_dist" + noise_dist)
     else:
-        print("For plot : Use plot.py --"+ dist + " --" + noise_dist)
+        print("For plot : Use plot.py --dist"+ dist + " --noise_dist" + noise_dist)
     
             
 

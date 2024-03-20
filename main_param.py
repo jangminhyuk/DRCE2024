@@ -175,7 +175,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     elif noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 1.0*np.eye(ny) #observation noise covariance
+                        M = 1.5*np.eye(ny) #observation noise covariance
                         mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = 0.0*np.ones(ny)
@@ -284,7 +284,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Now use : plot_params.py --"+ dist + " --" + noise_dist)
+    print("Now use : plot_params.py --dist"+ dist + " --noise_dist" + noise_dist)
     print("Please make sure your lambda_list and theta_v_list in plot_prams.py is as desired")
             
 
