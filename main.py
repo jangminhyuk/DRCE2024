@@ -184,7 +184,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         v_max = None
                         v_min = None
                         M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = 1.0*np.ones((ny, 1))
+                        mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -2.0*np.ones(ny)
                         v_max = 0.0*np.ones(ny)
@@ -341,7 +341,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
+    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
