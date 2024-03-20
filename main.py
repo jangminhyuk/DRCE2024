@@ -114,7 +114,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
     # change True to False if you don't want to use given lambda
-    use_lambda = False
+    use_lambda = True
     lambda_ = 15 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #theta_v_list  # radius of noise ambiguity set

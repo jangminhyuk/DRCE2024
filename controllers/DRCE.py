@@ -61,7 +61,7 @@ class DRCE:
         self.DR_sdp = self.create_DR_sdp()
         self.DR_sdp_init = self.create_DR_sdp_initial()
         print("DRCE")
-        if use_lambda==1: # Use given Lambda!!
+        if use_lambda==True: # Use given Lambda!!
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
@@ -210,7 +210,7 @@ class DRCE:
         #Parameters
         S_var = cp.Parameter((self.nx,self.nx), name='S_var')
         P_var = cp.Parameter((self.nx,self.nx), name='P_var')
-        Lambda_ = cp.Parameter(1, name='Lambda_')
+        Lambda_ = cp.Parameter( name='Lambda_')
         Sigma_w = cp.Parameter((self.nx, self.nx), name='Sigma_w') # nominal Sigma_w
         x_cov = cp.Parameter((self.nx, self.nx), name='x_cov') # x_cov from before time step
         M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')

@@ -56,7 +56,7 @@ class WDRC:
         print("WDRC ", self.dist, " / ", self.noise_dist)    
         self.sdp_prob = self.gen_sdp()
 
-        if use_lambda==1:
+        if use_lambda==True:
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
@@ -197,7 +197,7 @@ class WDRC:
             X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
         
             P_var = cp.Parameter((self.nx,self.nx))
-            lambda_ = cp.Parameter(1)
+            lambda_ = cp.Parameter()
             S_var = cp.Parameter((self.nx,self.nx))
             #Sigma_hat_12_var = cp.Parameter((self.nx,self.nx))
             Sigma_hat = cp.Parameter((self.nx,self.nx))
