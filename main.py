@@ -185,7 +185,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         M = 1.5*np.eye(ny) #observation noise covariance
                         mu_v = -1.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -2.0*np.ones(ny)
+                        v_min = -2.5*np.ones(ny)
                         v_max = 0.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
@@ -329,9 +329,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     print("Data generation Completed!!")
     
     if noise_plot_results:
-        print("For noise sample size effect plot : Use python plot_J.py --dist dist"+ dist + " --noise_dist noise_dist" + noise_dist)
+        print("For noise sample size effect plot : Use python plot_J.py --dist "+ dist + " --noise_dist " + noise_dist)
     else:
-        print("For plot : Use python plot.py --dist dist"+ dist + " --noise_dist noise_dist" + noise_dist)
+        print("For plot : Use python plot.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
