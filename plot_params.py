@@ -121,7 +121,7 @@ if __name__ == "__main__":
     
     # TODO : Modify the theta_v_list and lambda_list below to match your experiments!!! 
     theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    lambda_list = [6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     # Regular expression pattern to extract numbers from file names
     
     pattern_drce = r"drce_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
