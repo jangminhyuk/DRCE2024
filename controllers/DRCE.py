@@ -57,11 +57,14 @@ class DRCE:
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
         self.lambda_ = lambda_
+        
+        self.DR_sdp = self.create_DR_sdp()
+        self.DR_sdp_init = self.create_DR_sdp_initial()
         print("DRCE")
-        if use_lambda==True: # Use given Lambda!!
+        if use_lambda==1: # Use given Lambda!!
             self.lambda_ = lambda_
         else:
-            self.lambda_ = self.optimize_penalty() #optimize penalty parameter for given theta_w
+            self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
             
         
         
@@ -81,12 +84,14 @@ class DRCE:
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([4*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-6 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})
-        optimal_penalty = output.x[0]
-        print("DRCE Optimal penalty (lambda_star):", optimal_penalty)
+        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='BFGS', options={'eps': 1e-5 , 'disp': False, 'maxiter': 20000})
+
+        optimal_penalty = output.x
+        print("DRCE Optimal penalty (lambda_star):", optimal_penalty[0])
         return optimal_penalty
 
     def objective(self, penalty):
+        
         #Compute the upper bound in Proposition 1
         P = np.zeros((self.T+1, self.nx,self.nx))        
         S = np.zeros((self.T+1, self.nx,self.nx))
@@ -121,11 +126,14 @@ class DRCE:
         x_cov[0], S_xx[0], S_xy[0], S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
         for t in range(0, self.T-1):
             x_cov[t+1], S_xx[t+1], S_xy[t+1], S_yy[t+1], sigma_wc[t], z_tilde[t] = self.DR_kalman_filter_cov(P[t+1], S[t+1], self.M_hat[t+1], x_cov[t], self.Sigma_hat[t], penalty)
-        
+
         y = self.get_obs(self.x0_init, self.true_v_init)
         x0_mean = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean_hat, y, S_xx[0], S_xy[0], S_yy[0]) #initial state estimation
-        return penalty*self.T*self.theta_w**2 + (x0_mean.T @ P[0] @ x0_mean)[0][0] + 2*(r[0].T @ x0_mean)[0][0] + z[0][0] + np.trace((P[0] + S[0]) @ x_cov[0]) + z_tilde.sum()
+        obj_val = penalty*self.T*self.theta_w**2 + (self.x0_mean_hat.T @ P[0] @ self.x0_mean_hat)[0][0] + 2*(r[0].T @ self.x0_mean_hat)[0][0] + z[0][0] + np.trace(P[0] @ S_xx[0]) + np.trace(S[0] @ x_cov[0]) + z_tilde.sum()
 
+        #print(f'obj for theta_w={self.theta_w}, theta_v={self.theta_v}, theta_x0={self.theta_x0}, lambda={penalty}: {obj_val}')
+        return obj_val/self.T       
+        
     def binarysearch_infimum_penalty_finite(self):
         left = 0
         right = 100000
@@ -190,31 +198,24 @@ class DRCE:
         x = self.quad_inverse(x, wmax, wmin)
         return x.T
     
-    def solve_DR_sdp(self, P_t1, S_t1, M, X_cov, Sigma_hat, theta, Lambda_):
-        #construct problem
-        #Variables
-        V = cp.Variable((self.nx, self.nx), symmetric=True)
-        Y = cp.Variable((self.nx,self.nx))
-        Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True)
-        Z = cp.Variable((self.ny, self.ny))
-        X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
-        M_test = cp.Variable((self.ny, self.ny), symmetric=True)
+    
+    def create_DR_sdp(self):
+        V = cp.Variable((self.nx, self.nx), symmetric=True, name='V')
+        Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True, name='Sigma_wc')
+        Y = cp.Variable((self.nx,self.nx), name='Y')
+        X_pred = cp.Variable((self.nx,self.nx), symmetric=True, name='X_pred')
+        M_test = cp.Variable((self.ny, self.ny), symmetric=True, name='M_test')
+        Z = cp.Variable((self.ny, self.ny), name='Z')
         
         #Parameters
-        Sigma_w = cp.Parameter((self.nx, self.nx)) # nominal Sigma_w
-        radi = cp.Parameter(nonneg=True)
-        x_cov = cp.Parameter((self.nx, self.nx)) # x_cov from before time step
-        M_hat = cp.Parameter((self.ny, self.ny))
-        P_var = cp.Parameter((self.nx,self.nx))
-        S_var = cp.Parameter((self.nx,self.nx))
-        
-        Sigma_w.value = Sigma_hat
-        radi.value = theta
-        x_cov.value = X_cov
-        M_hat.value = M # Noise covariance
-        P_var.value = P_t1 # P[t+1]
-        S_var.value = S_t1 # S[t+1]
-        
+        S_var = cp.Parameter((self.nx,self.nx), name='S_var')
+        P_var = cp.Parameter((self.nx,self.nx), name='P_var')
+        Lambda_ = cp.Parameter(1, name='Lambda_')
+        Sigma_w = cp.Parameter((self.nx, self.nx), name='Sigma_w') # nominal Sigma_w
+        x_cov = cp.Parameter((self.nx, self.nx), name='x_cov') # x_cov from before time step
+        M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')
+        radi = cp.Parameter(nonneg=True, name='radi')
+               
         #use Schur Complements
         #obj function
         obj = cp.Maximize(cp.trace(S_var @ V) + cp.trace((P_var - Lambda_ * np.eye(self.nx)) @ Sigma_wc) + 2*Lambda_*cp.trace(Y)) 
@@ -240,40 +241,51 @@ class DRCE:
                 ]
         
         prob = cp.Problem(obj, constraints)
+        return prob
+        
+    def solve_DR_sdp(self, prob, P_t1, S_t1, M, X_cov, Sigma_hat, theta, Lambda_):
+        #construct problem
+        params = prob.parameters()
+        params[0].value = S_t1 # S[t+1]
+        params[1].value = P_t1 # P[t+1]
+        params[2].value = Lambda_
+        params[3].value = Sigma_hat
+        params[4].value = X_cov
+        params[5].value = M # Noise covariance
+        params[6].value = theta
+        
         
         prob.solve(solver=cp.MOSEK)
         
         if prob.status in ["infeasible", "unbounded"]:
             print(prob.status, 'False in DRKF combined!!!!!!!!!!!!!')
         
+        sol = prob.variables()
+        #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z']
         
-        S_xx_opt = X_pred.value
-        S_xy_opt = X_pred.value @ self.C.T
-        S_yy_opt = self.C @ X_pred.value @ self.C.T + M_test.value
+        S_xx_opt = sol[3].value
+        S_xy_opt = S_xx_opt @ self.C.T
+        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
         #S_opt = S.value
-        Sigma_wc_opt = Sigma_wc.value
+        Sigma_wc_opt = sol[1].value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, Sigma_wc_opt, cost
     
-    def solve_DR_sdp_initial(self, M_hat, X_hat):
+    
+    def create_DR_sdp_initial(self):
         #construct problem
         #Variables
-        X0 = cp.Variable((self.nx, self.nx), symmetric=True) # prediction
-        X = cp.Variable((self.nx, self.nx), symmetric=True)
-        M0 = cp.Variable((self.ny, self.ny), symmetric=True)
-        Z = cp.Variable((self.ny, self.ny))
-        Y = cp.Variable((self.nx, self.nx))
+        X0 = cp.Variable((self.nx, self.nx), symmetric=True, name='X0') # prediction
+        X = cp.Variable((self.nx, self.nx), symmetric=True, name='X')
+        M0 = cp.Variable((self.ny, self.ny), symmetric=True, name='M0')
+        Z = cp.Variable((self.ny, self.ny), name='Z')
+        Y = cp.Variable((self.nx, self.nx), name='Y')
+        
+        M0_hat = cp.Parameter((self.ny, self.ny), name='M0_hat') # nominal noise covariance
+        theta_v0 = cp.Parameter(nonneg=True, name='theta_v0')
+        X0_hat = cp.Parameter((self.nx, self.nx), name='X0_hat')
+        theta_x0 = cp.Parameter(nonneg=True, name='theta_x0')
 
-        X0_hat = cp.Parameter((self.nx, self.nx))
-        M0_hat = cp.Parameter((self.ny, self.ny)) # nominal noise covariance
-        theta_x0 = cp.Parameter(nonneg=True)
-        theta_v0 = cp.Parameter(nonneg=True)
-        
-        X0_hat.value = X_hat
-        M0_hat.value = M_hat
-        theta_x0.value = self.theta_x0
-        theta_v0.value = self.theta_v
-        
         #use Schur Complements
         #obj function
         obj = cp.Maximize(cp.trace(X)) 
@@ -299,15 +311,29 @@ class DRCE:
                 ]
         
         prob = cp.Problem(obj, constraints)
+
+
+        return prob
+    
+
+    
+    def solve_DR_sdp_initial(self, prob, M_hat, X_hat):
+        params = prob.parameters()
+        params[0].value = M_hat
+        params[1].value = self.theta_v
+        params[2].value = X_hat
+        params[3].value = self.theta_x0
+        
         
         prob.solve(solver=cp.MOSEK)
         
         if prob.status in ["infeasible", "unbounded"]:
             print(prob.status, 'False in DRKF combined initial!!!!!!!!!!!!!')
         
-        S_xx_opt = X0.value
-        S_xy_opt = X0.value @ self.C.T
-        S_yy_opt = self.C @ X0.value @ self.C.T + M0.value
+        sol = prob.variables()
+        S_xx_opt = sol[0].value
+        S_xy_opt = S_xx_opt @ self.C.T
+        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[2].value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, cost
     
@@ -328,7 +354,7 @@ class DRCE:
     def DR_kalman_filter_cov(self, P, S, M_hat, X_cov, Sigma_hat, Lambda):
         #Performs state estimation based on the current state estimate, control input and new observation
         theta = self.theta_v
-        S_xx, S_xy, S_yy, Sigma_wc, cost = self.solve_DR_sdp(P, S, M_hat, X_cov, Sigma_hat, theta, Lambda)
+        S_xx, S_xy, S_yy, Sigma_wc, cost = self.solve_DR_sdp(self.DR_sdp, P, S, M_hat, X_cov, Sigma_hat, theta, Lambda)
         
         X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
         
@@ -336,7 +362,7 @@ class DRCE:
     
     def DR_kalman_filter_cov_initial(self, M_hat, X_cov): #DRKF !!
         #Performs state estimation based on the current state estimate, control input and new observation
-        S_xx, S_xy, S_yy, cost = self.solve_DR_sdp_initial(M_hat, X_cov)
+        S_xx, S_xy, S_yy, cost = self.solve_DR_sdp_initial(self.DR_sdp_init, M_hat, X_cov)
         
         X_cov_new = S_xx
         return X_cov_new, S_xx, S_xy, S_yy, cost

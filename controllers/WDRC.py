@@ -54,11 +54,12 @@ class WDRC:
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
             
         print("WDRC ", self.dist, " / ", self.noise_dist)    
-        if use_lambda==True:
+        self.sdp_prob = self.gen_sdp()
+
+        if use_lambda==1:
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
-        
         
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))
@@ -79,9 +80,9 @@ class WDRC:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([4*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-6 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})  
-        optimal_penalty = output.x[0]
-        print("WDRC Optimal penalty (lambda_star) :", optimal_penalty, " when theta_w : ", self.theta_w, "\n\n")
+        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='BFGS', options={'eps': 1e-4 , 'disp': False, 'maxiter': 2000})  
+        optimal_penalty = output.x
+        print("WDRC Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
 
     def objective(self, penalty):
@@ -115,13 +116,15 @@ class WDRC:
         x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
         for t in range(0, self.T-1):
             x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t], x_cov[t], sigma_wc[t])
-            sdp_prob = self.gen_sdp(penalty, self.M_hat[t])
-            sigma_wc[t], z_tilde[t], status = self.solve_sdp(sdp_prob, x_cov[t], P[t+1], S[t+1], self.Sigma_hat[t])
+            sigma_wc[t], z_tilde[t], status = self.solve_sdp(self.sdp_prob, penalty, self.M_hat[t], x_cov[t], P[t+1], S[t+1], self.Sigma_hat[t])
             if status in ["infeasible", "unbounded"]:
                 print(status)
                 return np.inf
-                
-        return penalty*self.T*self.theta_w**2 + (x0_mean.T @ P[0] @ x0_mean)[0][0] + 2*(r[0].T @ x0_mean)[0][0] + z[0][0] + np.trace((P[0] + S[0]) @ x_cov[0]) + z_tilde.sum()
+
+        obj_val = penalty*self.T*self.theta_w**2 + (self.x0_mean_hat.T @ P[0] @ self.x0_mean_hat)[0][0] + 2*(r[0].T @ self.x0_mean_hat)[0][0] + z[0][0] + np.trace(P[0] @ self.x0_cov_hat)  + np.trace(S[0] @ x_cov[0]) + z_tilde.sum()
+
+        #print(f'obj for {penalty}: {obj_val}')
+        return obj_val/self.T
     
     def binarysearch_infimum_penalty_finite(self):
         left = 0
@@ -187,16 +190,18 @@ class WDRC:
         x = self.quad_inverse(x, wmax, wmin)
         return x.T
     
-    def gen_sdp(self, lambda_, M_hat):
+    def gen_sdp(self):
             Sigma = cp.Variable((self.nx,self.nx), symmetric=True)
             Y = cp.Variable((self.nx,self.nx))
             X = cp.Variable((self.nx,self.nx), symmetric=True)
             X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
         
             P_var = cp.Parameter((self.nx,self.nx))
+            lambda_ = cp.Parameter(1)
             S_var = cp.Parameter((self.nx,self.nx))
             #Sigma_hat_12_var = cp.Parameter((self.nx,self.nx))
             Sigma_hat = cp.Parameter((self.nx,self.nx))
+            M_hat = cp.Parameter((self.ny,self.ny))
             X_bar = cp.Parameter((self.nx,self.nx))
             
             obj = cp.Maximize(cp.trace((P_var - lambda_*np.eye(self.nx)) @ Sigma) + 2*lambda_*cp.trace(Y) + cp.trace(S_var @ X))
@@ -219,12 +224,14 @@ class WDRC:
             return prob
         
         
-    def solve_sdp(self, sdp_prob, x_cov, P, S, Sigma_hat):
+    def solve_sdp(self, sdp_prob, lambda_, M_hat, x_cov, P, S, Sigma_hat):
         params = sdp_prob.parameters()
         params[0].value = P
-        params[1].value = S
-        params[2].value = Sigma_hat
-        params[3].value = x_cov
+        params[1].value = lambda_
+        params[2].value = S
+        params[3].value = Sigma_hat
+        params[4].value = M_hat
+        params[5].value = x_cov
         
         sdp_prob.solve(solver=cp.MOSEK)
         Sigma = sdp_prob.variables()[0].value
@@ -305,8 +312,8 @@ class WDRC:
         self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
         for t in range(self.T):
             print("WDRC Offline step : ",t,"/",self.T)
-            sdp_prob = self.gen_sdp(self.lambda_, self.M_hat[t])
-            sigma_wc[t], _, status = self.solve_sdp(sdp_prob, self.x_cov[t], self.P[t+1], self.S[t+1], self.Sigma_hat[t])
+            
+            sigma_wc[t], _, status = self.solve_sdp(self.sdp_prob, self.lambda_, self.M_hat[t], self.x_cov[t], self.P[t+1], self.S[t+1], self.Sigma_hat[t])
             if status in ["infeasible", "unbounded"]:
                 print(status, 'False!!!!!!!!!!!!!')
             self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], sigma_wc[t])
