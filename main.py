@@ -123,8 +123,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_w_list = [1.0]
         theta_v_list = [5.0]
     elif dist == "quadratic":
-        theta_w_list = [2.0]
-        theta_v_list = [4.0]
+        theta_w_list = [1.0]
+        theta_v_list = [5.0]
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
