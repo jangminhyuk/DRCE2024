@@ -99,7 +99,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     noisedist = [noise_dist1]
     num_noise_list = [num_noise_samples]
     theta_w = 1.0 # will not be used for this file!!!
-    num_x0_samples = 10 #  x0 samples 
+    num_x0_samples = 15 #  x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
@@ -172,7 +172,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         M = 1.5*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -0.5*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
                         v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
@@ -292,8 +292,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     
