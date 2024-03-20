@@ -113,15 +113,15 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
-    # change 1 to 0 if you don't want to use given lambda
-    use_lambda = 1
-    lambda_ = 10 # will not be used if the parameter "use_lambda = 0"
+    # change True to False if you don't want to use given lambda
+    use_lambda = False
+    lambda_ = 10 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #theta_v_list  # radius of noise ambiguity set
-    #theta_w_list  # theta_w have no effect if the parameter "use_lambda = 1"
+    #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [1.5]
-        theta_v_list = [1.5]
+        theta_w_list = [2.0]
+        theta_v_list = [2.0]
     elif dist == "quadratic":
         theta_w_list = [2.0]
         theta_v_list = [2.0]
@@ -189,11 +189,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     elif noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.5*np.eye(ny) #observation noise covariance
+                        M = 1.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = 0.0*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                         

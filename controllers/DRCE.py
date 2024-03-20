@@ -58,10 +58,10 @@ class DRCE:
         self.theta_x0 = theta_x0
         self.lambda_ = lambda_
         print("DRCE")
-        if use_lambda==1: # Use given Lambda!!
+        if use_lambda==True: # Use given Lambda!!
             self.lambda_ = lambda_
         else:
-            self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
+            self.lambda_ = self.optimize_penalty() #optimize penalty parameter for given theta_w
             
         
         

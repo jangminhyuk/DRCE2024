@@ -54,7 +54,7 @@ class WDRC:
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
             
         print("WDRC ", self.dist, " / ", self.noise_dist)    
-        if use_lambda==1:
+        if use_lambda==True:
             self.lambda_ = lambda_
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
