@@ -79,7 +79,7 @@ class WDRC:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-8 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})  
+        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-6 ,'maxfun': 20000, 'disp': False, 'maxiter': 20000})  
         optimal_penalty = output.x[0]
         print("WDRC Optimal penalty (lambda_star) :", optimal_penalty, " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty

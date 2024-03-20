@@ -22,7 +22,7 @@ There are 2 main codes to generate data : main.py and main_param.py.
 
 main.py generates the cost for different noise sample size. To run the experiment in default setting, call the main python script:
 ```
-python main.py
+python main.py --noise_plot
 ```
 This will generate lqg, wdrc, drce mean and standard deviation of the total cost inside the results/normal_normal/finite/multiple/num_noiseplot directory.
 
