@@ -115,7 +115,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60] # disturbance distribution penalty parameter
     #lambda_list = [6]
-    theta_x0 = 1.0 # radius of initial state ambiguity set
+    theta_x0 = 0.5 # radius of initial state ambiguity set
     
     for noise_dist in noisedist:
         for lambda_ in lambda_list:
@@ -169,11 +169,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
+                        M = 1.5*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -2.5*np.ones(ny)
-                        v_max = 0*np.ones(ny)
+                        v_min = -0.5*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
