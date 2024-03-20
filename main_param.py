@@ -284,7 +284,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Now use plot_params.py to plot the results! Please make sure your lambda_list and theta_v_list in plot_parms.py is as desired")
+    print("Now use plot_params.py to plot the results! Please make sure your lambda_list and theta_v_list in plot_prams.py is as desired")
             
 
 if __name__ == "__main__":
