@@ -101,7 +101,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 10 # num x0 samples 
+    num_x0_samples = 15 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
@@ -115,19 +115,19 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #----------------------------
     # change True to False if you don't want to use given lambda
     use_lambda = False
-    lambda_ = 15 # will not be used if the parameter "use_lambda = False"
+    lambda_ = 10 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [1.0]
-        theta_v_list = [4.0]
-    elif dist == "quadratic":
-        theta_w_list = [1.0]
-        theta_v_list = [4.0]
-    else:
-        theta_w_list = [1.0]
+        theta_w_list = [1.5]
         theta_v_list = [3.0]
+    elif dist == "quadratic":
+        theta_w_list = [2.0]
+        theta_v_list = [2.0]
+    else:
+        theta_w_list = [2.0]
+        theta_v_list = [2.5]
         
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
@@ -143,30 +143,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     path = "./results/{}_{}/finite/multiple/".format(dist, noise_dist)
                     if not os.path.exists(path):
                         os.makedirs(path)
+                
                     #-------Disturbance Distribution-------
-                    if dist == "normal":
-                        #disturbance distribution parameters
-                        w_max = None
-                        w_min = None
-                        mu_w = 0.2*np.ones((nx, 1))
-                        Sigma_w= 0.2*np.eye(nx)
-                        #initial state distribution parameters
-                        x0_max = None
-                        x0_min = None
-                        x0_mean = 0.1*np.ones((nx,1))
-                        x0_cov = 0.1*np.eye(nx)
-                    elif dist == "quadratic":
-                        #disturbance distribution parameters
-                        w_max = 0.5*np.ones(nx)
-                        w_min = 0.0*np.ones(nx)
-                        mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
-                        Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
-                        #initial state distribution parameters
-                        x0_max = 0.5*np.ones(nx)
-                        x0_min = 0.0*np.ones(nx)
-                        x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
-                        x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
-                    elif dist =="uniform":
+                    if dist =="uniform":
                         #disturbance distribution parameters
                         w_max = 0.3*np.ones(nx)
                         w_min = -0.2*np.ones(nx)
@@ -178,22 +157,45 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
+                    elif dist == "normal":
+                        #disturbance distribution parameters
+                        w_max = None
+                        w_min = None
+                        mu_w = 0.1*np.ones((nx, 1))
+                        Sigma_w= 0.1*np.eye(nx)
+                        #initial state distribution parameters
+                        x0_max = None
+                        x0_min = None
+                        x0_mean = 0.05*np.ones((nx,1))
+                        x0_cov = 0.05*np.eye(nx)
+                    elif dist == "quadratic":
+                        #disturbance distribution parameters
+                        w_max = 0.2*np.ones(nx)
+                        w_min = -0.1*np.ones(nx)
+                        mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
+                        Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
+                        #initial state distribution parameters
+                        x0_max = 0.1*np.ones(nx)
+                        x0_min = -0.1*np.ones(nx)
+                        x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
+                        x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
+                        
                     #-------Noise distribution ---------#
-                    if noise_dist =="normal":
+                    if noise_dist == "uniform":
+                        v_min = -0.5*np.ones(ny)
+                        v_max = 0.5*np.ones(ny)
+                        mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
+                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
+                    elif noise_dist =="normal":
                         v_max = None
                         v_min = None
                         M = 2.0*np.eye(ny) #observation noise covariance
                         mu_v = 1.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -2.5*np.ones(ny)
-                        v_max = 0.0*np.ones(ny)
+                        v_min = -2.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
-                    elif noise_dist == "uniform":
-                        v_min = -1.5*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
-                        mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                         
                         
                     #-------Estimate the nominal distribution-------
@@ -329,9 +331,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     print("Data generation Completed!!")
     
     if noise_plot_results:
-        print("For noise sample size effect plot : Use python plot_J.py --dist "+ dist + " --noise_dist " + noise_dist)
+        print("For noise sample size effect plot : Use plot_J.py --dist"+ dist + " --noise_dist" + noise_dist)
     else:
-        print("For plot : Use python plot.py --dist "+ dist + " --noise_dist " + noise_dist)
+        print("For plot : Use plot.py --dist"+ dist + " --noise_dist" + noise_dist)
     
             
 
@@ -340,7 +342,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
