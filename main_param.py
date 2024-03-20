@@ -174,11 +174,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     elif noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.5*np.eye(ny) #observation noise covariance
+                        M = 1.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = 0.0*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                         
