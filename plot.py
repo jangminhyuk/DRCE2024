@@ -82,7 +82,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
                 plt.fill_between(t, x_wdrc_mean[:,i,0] + 0.3*x_wdrc_std[:,i,0],
                                 x_wdrc_mean[:,i,0] - 0.3*x_wdrc_std[:,i,0], facecolor='tab:blue', alpha=0.3)
             if x_drce_list != []:
-                plt.plot(t, x_drce_mean[:,i,0], 'tab:green', label='DRCE')
+                plt.plot(t, x_drce_mean[:,i,0], 'tab:green', label='WDR-CE')
                 plt.fill_between(t, x_drce_mean[:,i, 0] + 0.3*x_drce_std[:,i,0],
                                x_drce_mean[:,i,0] - 0.3*x_drce_std[:,i,0], facecolor='tab:green', alpha=0.3)
             
@@ -113,7 +113,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
                 plt.fill_between(t, u_wdrc_mean[:,i,0] + 0.25*u_wdrc_std[:,i,0],
                                 u_wdrc_mean[:,i,0] - 0.25*u_wdrc_std[:,i,0], facecolor='tab:blue', alpha=0.3)
             if u_drce_list != []:
-                plt.plot(t, u_drce_mean[:,i,0], 'tab:green', label='DRCE')
+                plt.plot(t, u_drce_mean[:,i,0], 'tab:green', label='WDR-CE')
                 plt.fill_between(t, u_drce_mean[:,i,0] + 0.25*u_drce_std[:,i,0],
                              u_drce_mean[:,i,0] - 0.25*u_drce_std[:,i,0], facecolor='tab:green', alpha=0.3)       
             
@@ -142,7 +142,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
                 plt.fill_between(t, y_wdrc_mean[:,i,0] + 0.25*y_wdrc_std[:,i,0],
                                 y_wdrc_mean[:,i, 0] - 0.25*y_wdrc_std[:,i,0], facecolor='tab:blue', alpha=0.3)
             if y_drce_list != []:
-                plt.plot(t, y_drce_mean[:,i,0], 'tab:green', label='DRCE')
+                plt.plot(t, y_drce_mean[:,i,0], 'tab:green', label='WDR-CE')
                 plt.fill_between(t, y_drce_mean[:,i,0] + 0.25*y_drce_std[:,i,0],
                              y_drce_mean[:,i, 0] - 0.25*y_drce_std[:,i,0], facecolor='tab:green', alpha=0.3)
             
@@ -172,7 +172,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
             plt.fill_between(t, J_wdrc_mean + 0.25*J_wdrc_std, J_wdrc_mean - 0.25*J_wdrc_std, facecolor='tab:blue', alpha=0.3)
         
         if J_drce_list != []:
-            plt.plot(t, J_drce_mean, 'tab:green', label='DRCE')
+            plt.plot(t, J_drce_mean, 'tab:green', label='WDR-CE')
             plt.fill_between(t, J_drce_mean + 0.25*J_drce_std, J_drce_mean - 0.25*J_drce_std, facecolor='tab:green', alpha=0.3)
         
         plt.xlabel(r'$t$', fontsize=16)
@@ -196,7 +196,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
         
         ax.hist(J_lqr_ar[:,0], bins=50, range=(min_bin,max_bin), color='tab:red', label='LQG', alpha=0.5, linewidth=0.5, edgecolor='tab:red')
         ax.hist(J_wdrc_ar[:,0], bins=50, range=(min_bin,max_bin), color='tab:blue', label='WDRC', alpha=0.5, linewidth=0.5, edgecolor='tab:blue')
-        ax.hist(J_drce_ar[:,0], bins=50, range=(min_bin,max_bin), color='tab:green', label='DRCE', alpha=0.5, linewidth=0.5, edgecolor='tab:green')
+        ax.hist(J_drce_ar[:,0], bins=50, range=(min_bin,max_bin), color='tab:green', label='WDR-CE', alpha=0.5, linewidth=0.5, edgecolor='tab:green')
         
         
         ax.axvline(J_wdrc_ar[:,0].mean(), color='navy', linestyle='dashed', linewidth=1.5)
@@ -225,8 +225,8 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path,
         plt.close('all')
         
         
-    print( 'cost_lqr:{} ({})'.format(J_lqr_mean[0],J_lqr_std[0]),'cost_WDRC: {} ({})'.format(J_wdrc_mean[0], J_wdrc_std[0]) , 'cost_drce:{} ({})'.format(J_drce_mean[0],J_drce_std[0]))
-    print( 'time_lqr: {} ({})'.format(time_lqr_ar.mean(), time_lqr_ar.std()),'time_WDRC: {} ({})'.format(time_wdrc_ar.mean(), time_wdrc_ar.std()), 'time_drce: {} ({})'.format(time_drce_ar.mean(), time_drce_ar.std()))
+    print( 'cost_lqr:{} ({})'.format(J_lqr_mean[0],J_lqr_std[0]),'cost_WDRC: {} ({})'.format(J_wdrc_mean[0], J_wdrc_std[0]) , 'cost_wdrce:{} ({})'.format(J_drce_mean[0],J_drce_std[0]))
+    print( 'time_lqr: {} ({})'.format(time_lqr_ar.mean(), time_lqr_ar.std()),'time_WDRC: {} ({})'.format(time_wdrc_ar.mean(), time_wdrc_ar.std()), 'time_wdrce: {} ({})'.format(time_drce_ar.mean(), time_drce_ar.std()))
     #print( 'Settling time_lqr: {}'.format(SettlingTime_lqr),'Settling time_WDRC: {} '.format(SettlingTime), 'Settling time_drce: {}'.format(SettlingTime_drce))
 
 
