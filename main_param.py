@@ -112,8 +112,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
-    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
-    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60] # disturbance distribution penalty parameter
+    #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
+    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
+    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+    #theta_v_list = [5.0]
     #lambda_list = [6]
     theta_x0 = 0.5 # radius of initial state ambiguity set
     
@@ -144,8 +146,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 0.05*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
-                        w_min = -0.1*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
+                        w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
@@ -169,11 +171,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 1.5*np.eye(ny) #observation noise covariance
+                        M = 2.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -1.0*np.ones(ny)
-                        v_max = 2.0*np.ones(ny)
+                        v_min = -5.0*np.ones(ny)
+                        v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -283,8 +285,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Now use : python plot_params.py --dist "+ dist + " --noise_dist " + noise_dist)
     print("Please make sure your lambda_list and theta_v_list in plot_prams.py is as desired")
+    print("Now use : python plot_params.py --dist "+ dist + " --noise_dist " + noise_dist)
+    
             
 
 if __name__ == "__main__":

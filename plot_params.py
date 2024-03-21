@@ -77,9 +77,9 @@ def summarize(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdrc_lambd
     )
     
     # Plot smooth surface - DCE
-    surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='DRCE')
+    surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE')
     surfaces.append(surface_drce)
-    labels.append('DRCE')
+    labels.append('WDR-CE')
     
     
     ax.legend(handles=surfaces, labels=labels)
@@ -120,8 +120,11 @@ if __name__ == "__main__":
     # lambda_list = [ 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
     # TODO : Modify the theta_v_list and lambda_list below to match your experiments!!! 
-    theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    # theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+    # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    
+    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
+    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     # Regular expression pattern to extract numbers from file names
     
     pattern_drce = r"drce_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
