@@ -120,7 +120,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [0.5]
+        theta_w_list = [1.0]
         theta_v_list = [5.0]
     elif dist == "quadratic":
         theta_w_list = [0.5]
@@ -155,7 +155,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_max = None
                         x0_min = None
                         x0_mean = 0.1*np.ones((nx,1))
-                        x0_cov = 0.2*np.eye(nx)
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
                         w_max = 0.2*np.ones(nx)

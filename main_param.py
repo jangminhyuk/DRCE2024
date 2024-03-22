@@ -117,7 +117,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     #theta_v_list = [5.0]
     #lambda_list = [6]
-    theta_x0 = 0.5 # radius of initial state ambiguity set
+    theta_x0 = 1.0 # radius of initial state ambiguity set
     
     for noise_dist in noisedist:
         for lambda_ in lambda_list:
@@ -143,7 +143,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_max = None
                         x0_min = None
                         x0_mean = 0.1*np.ones((nx,1))
-                        x0_cov = 0.2*np.eye(nx)
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
                         w_max = 0.2*np.ones(nx)
