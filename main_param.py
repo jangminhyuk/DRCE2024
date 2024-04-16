@@ -6,9 +6,9 @@ import argparse
 from controllers.LQG import LQG
 from controllers.WDRC import WDRC
 from controllers.DRCE import DRCE
-
-from plot_params import summarize
-from plot_J import summarize_noise
+from controllers.inf_LQG import inf_LQG
+from controllers.inf_WDRC import inf_WDRC
+from controllers.inf_DRCE import inf_DRCE
 
 import os
 import pickle
@@ -92,11 +92,12 @@ def save_data(path, data):
     pickle.dump(data, output)
     output.close()
 
-def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results):
+def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite, plot_results):
     
     lambda_ = 10
     seed = 2024 # Random seed
     noisedist = [noise_dist1]
+    #noisedist = ["normal", "uniform", "quadratic"]
     num_noise_list = [num_noise_samples]
     theta_w = 1.0 # will not be used for this file!!!
     num_x0_samples = 15 #  x0 samples 
@@ -111,24 +112,49 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
+    if infinite: 
+        T = 100 # Test for longer horizon if infinite (Can be erased!)
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
+    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     #theta_v_list = [5.0]
     #lambda_list = [6]
     theta_x0 = 1.0 # radius of initial state ambiguity set
-    
+    use_lambda = False # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
+    if use_lambda:
+        dist_parameter_list = lambda_list
+    else:
+        dist_parameter_list = theta_w_list
+        
     for noise_dist in noisedist:
-        for lambda_ in lambda_list:
+        for dist_parameter in dist_parameter_list:
             for theta in theta_v_list:
                 for num_noise in num_noise_list:
-                    print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ lambda: ", lambda_, "/ theta_v : ", theta)
+                    
                     np.random.seed(seed) # fix Random seed!
                     print("--------------------------------------------")
                     print("number of noise sample : ", num_noise)
                     print("number of disturbance sample : ", num_samples)
-                    path = "./results/{}_{}/finite/multiple/params_lambda/".format(dist, noise_dist)
+                    if use_lambda:
+                        lambda_ = dist_parameter
+                        print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ lambda: ", lambda_, "/ theta_v : ", theta)
+                    else:
+                        theta_w = dist_parameter
+                        print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ theta_w: ", theta_w, "/ theta_v : ", theta)
+                    
+                    if infinite:
+                        if use_lambda:
+                            path = "./results/{}_{}/infinite/multiple/params_lambda/".format(dist, noise_dist)
+                        else:
+                            path = "./results/{}_{}/infinite/multiple/params_thetas/".format(dist, noise_dist)
+                    else:
+                        if use_lambda:
+                            path = "./results/{}_{}/finite/multiple/params_lambda/".format(dist, noise_dist)
+                        else:
+                            path = "./results/{}_{}/finite/multiple/params_thetas/".format(dist, noise_dist)
+                        
                     if not os.path.exists(path):
                         os.makedirs(path)
                 
@@ -138,7 +164,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         w_max = None
                         w_min = None
                         mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.1*np.eye(nx)
+                        Sigma_w= 0.5*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -179,19 +205,28 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
-                        v_min = -1.5*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                         
                         
                     #-------Estimate the nominal distribution-------
-                    # Nominal initial state distribution
-                    x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
-                    # Nominal Disturbance distribution
-                    mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                    # Nominal Noise distribution
-                    v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                    if infinite:
+                        # Nominal initial state distribution
+                        x0_mean_hat, x0_cov_hat = gen_sample_dist_inf(dist, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
+                        # Nominal Disturbance distribution
+                        mu_hat, Sigma_hat = gen_sample_dist_inf(dist, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
+                        # Nominal Noise distribution
+                        v_mean_hat, M_hat = gen_sample_dist_inf(noise_dist, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                    else:
+                        # Nominal initial state distribution
+                        x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
+                        # Nominal Disturbance distribution
+                        mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
+                        # Nominal Noise distribution
+                        v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                      
                     M_hat = M_hat + 1e-6*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
                     
                     #-------Create a random system-------
@@ -203,11 +238,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     output_drce_list = []
                     
                     #Initialize controllers
-                    use_lambda = True # We will not used theta_w, and use lambda!
-                    drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                    wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                    lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0])
-                
+                    
+                    if infinite:
+                        drce = inf_DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
+                        lqg = inf_LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat, x0_cov_hat)
+                        wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
+                        
+                    else:
+                        wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
+        
                     wdrc.backward()
                     drce.backward()
                     lqg.backward()
@@ -275,9 +316,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     #-----------------------------------------
                     # Save data #
                     theta_v_ = f"_{str(theta).replace('.', '_')}" # change 1.0 to 1_0 for file name
-                    
-                    save_data(path + 'drce_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
-                    save_data(path + 'wdrc_' + str(lambda_) + '.pkl', J_WDRC_mean)
+                    theta_w_ = f"_{str(theta_w).replace('.', '_')}" # change 1.0 to 1_0 for file name
+                    if use_lambda:
+                        save_data(path + 'drce_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
+                        save_data(path + 'wdrc_' + str(lambda_) + '.pkl', J_WDRC_mean)
+                    else:
+                        save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
+                        save_data(path + 'wdrc' + theta_v_ + '.pkl', J_WDRC_mean)
+                        
                     save_data(path + 'lqg.pkl', J_LQG_mean)
             
                     #Summarize and plot the results
@@ -285,8 +331,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Please make sure your lambda_list and theta_v_list in plot_prams.py is as desired")
-    print("Now use : python plot_params.py --dist "+ dist + " --noise_dist " + noise_dist)
+    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
+    if infinite:
+        if use_lambda:
+            print("Now use : python plot_params.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+        else:
+            print("Now use : python plot_params.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+    else:
+        if use_lambda:
+            print("Now use : python plot_params.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+        else:
+            print("Now use : python plot_params.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
@@ -299,6 +354,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
+    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     
     args = parser.parse_args()
-    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.plot)
+    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.infinite, args.plot)

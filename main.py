@@ -9,8 +9,6 @@ from controllers.DRCE import DRCE
 from controllers.inf_LQG import inf_LQG
 from controllers.inf_WDRC import inf_WDRC
 from controllers.inf_DRCE import inf_DRCE
-from plot_params import summarize
-from plot_J import summarize_noise
 
 import os
 import pickle
@@ -115,6 +113,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
+    if infinite: 
+        T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
     use_lambda = False
     lambda_ = 10 # will not be used if the parameter "use_lambda = False"
@@ -159,7 +159,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         w_max = None
                         w_min = None
                         mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.1*np.eye(nx)
+                        Sigma_w= 0.5*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -192,7 +192,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.5*np.eye(ny) #observation noise covariance
+                        M = 2.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
@@ -200,8 +200,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
-                        v_min = -1.5*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                         
