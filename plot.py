@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import argparse
 import pickle
 
-def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path, num, plot_results=True):
+def summarize(out_lq_list, out_wdrc_list, out_drce_list, dist, noise_dist, path, num, infinite, plot_results=True):
     x_lqr_list, J_lqr_list, y_lqr_list, u_lqr_list = [], [], [], []
     x_wdrc_list, J_wdrc_list, y_wdrc_list, u_wdrc_list = [], [], [], [] # original wdrc with ordinary Kalman Filter
     x_drce_list, J_drce_list, y_drce_list, u_drce_list = [], [], [], [] # drce
@@ -236,13 +236,17 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quad)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quad)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs to plot
+    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
 
     args = parser.parse_args()
 
     horizon = "finite"
         
     print('\n-------Summary-------')
-    path = "./results/{}_{}/finite/multiple/".format(args.dist, args.noise_dist)
+    if args.infinite:
+        path = "./results/{}_{}/infinite/multiple/".format(args.dist, args.noise_dist)
+    else:
+        path = "./results/{}_{}/finite/multiple/".format(args.dist, args.noise_dist)
     
     #Load data
     lqg_file = open(path + 'lqg.pkl', 'rb')
@@ -257,6 +261,6 @@ if __name__ == "__main__":
     wdrc_file.close()
     drce_file.close()
     
-    summarize(lqg_data, wdrc_data, drce_data, args.dist, args.noise_dist, path, args.num_sim, plot_results=True)
+    summarize(lqg_data, wdrc_data, drce_data, args.dist, args.noise_dist, path, args.num_sim, args.infinite , plot_results=True)
     
 

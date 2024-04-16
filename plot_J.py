@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import argparse
 import pickle
 
-def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, dist, noise_dist, path):
+def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, dist, noise_dist, infinite, path):
 
     t = np.array([5, 10, 15, 20, 25, 30, 35, 40])
     
@@ -50,12 +50,15 @@ if __name__ == "__main__":
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform)
     parser.add_argument('--application', required=False, action="store_true")
     parser.add_argument('--theta', required=False, default="0.1")
+    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     args = parser.parse_args()
     
     
     print('\n-------Summary-------')
-    
-    path = "./results/{}_{}/finite/multiple/num_noise_plot".format(args.dist, args.noise_dist)
+    if args.infinite:
+        path = "./results/{}_{}/infinite/multiple/num_noise_plot".format(args.dist, args.noise_dist)
+    else:
+        path = "./results/{}_{}/finite/multiple/num_noise_plot".format(args.dist, args.noise_dist)
     num_noise_list = [5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40]
     avg_cost_lqg_file = open(path + '/lqg_mean.pkl', 'rb' )
     avg_cost_lqg = pickle.load(avg_cost_lqg_file)
@@ -81,4 +84,4 @@ if __name__ == "__main__":
     std_cost_drce = pickle.load(std_cost_drce_file)
     std_cost_drce_file.close()
     
-    summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, args.dist, args.noise_dist, path)
+    summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, std_cost_wdrc, avg_cost_drce, std_cost_drce, args.dist, args.noise_dist, args.infinite ,path)

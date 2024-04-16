@@ -119,6 +119,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     use_lambda = False
     lambda_ = 10 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
+    noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
@@ -191,7 +192,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
+                        M = 0.5*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
@@ -234,11 +235,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     
                     #Initialize controllers
                     if infinite:
-                        #drce = inf_DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                        #wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        drce = inf_DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
                         lqg = inf_LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat, x0_cov_hat)
                         wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
-                        drce = lqg
+                        
                     else:
                         wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
@@ -360,9 +360,15 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     print("Data generation Completed!!")
     
     if noise_plot_results:
-        print("For noise sample size effect plot : Use python plot_J.py --dist "+ dist + " --noise_dist " + noise_dist)
+        if infinite:
+            print("For noise sample size effect plot : Use python plot_J.py --dist "+ dist + " --noise_dist " + noise_dist)
+        else:
+            print("For noise sample size effect plot : Use python plot_J.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
     else:
-        print("For plot : Use python plot.py --dist "+ dist + " --noise_dist " + noise_dist)
+        if infinite:
+            print("For plot : Use python plot.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+        else:
+            print("For plot : Use python plot.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 

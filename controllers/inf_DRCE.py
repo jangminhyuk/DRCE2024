@@ -9,7 +9,7 @@ import scipy
 import control
 
 class inf_DRCE:
-    def __init__(self, lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
+    def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
@@ -24,11 +24,13 @@ class inf_DRCE:
         self.x0_mean_hat = x0_mean_hat
         self.x0_cov_hat = x0_cov_hat
         self.mu_hat = mu_hat
-        self.Sigma_hat = Sigma_hat
+        self.Sigma_hat = Sigma_hat # Sigma_w_hat
         self.mu_w = mu_w
         self.mu_v = mu_v
         self.Sigma_w = Sigma_w
         self.theta_w = theta_w
+        self.theta_v = theta_v
+        self.theta_x0 = theta_x0
         self.error_bound = 1e-5
         self.max_iteration = 1000
         
@@ -58,7 +60,7 @@ class inf_DRCE:
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
             
         print("inf WDR-CE ", self.dist, " / ", self.noise_dist)    
-        self.sdp_prob = self.gen_sdp()
+        self.sdp_prob = self.create_DR_sdp()
 
         if use_lambda==True:
             self.lambda_ = np.array([lambda_])
@@ -75,9 +77,9 @@ class inf_DRCE:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='Nelder-Mead', options={'disp': False, 'maxiter': 100, 'ftol': 1e-7})
+        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='Nelder-Mead', options={'disp': False, 'maxiter': 1000, 'ftol': 1e-7})
         optimal_penalty = output.x
-        print("inf WDRC Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
+        print("inf WDRCE Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
 
     def objective(self, penalty):
@@ -110,7 +112,7 @@ class inf_DRCE:
                 r_ss = r
                 temp = np.linalg.inv(np.eye(self.nx) + P @ Phi)
 #                sdp_prob = self.gen_sdp(penalty)
-                P_post_ss, sigma_wc_ss, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P_ss, S_ss, penalty)
+                P_post_ss, sigma_wc_ss, M_wc, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P_ss, S_ss, penalty)
                 if status in ["infeasible", "unbounded", "unknown"]:
                     print(status)
                     return np.inf
@@ -158,7 +160,7 @@ class inf_DRCE:
             r = r_temp
             z = z_temp
             if max_diff < self.error_bound:
-                P_post_ss, sigma_wc_ss, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P, S, np.array([penalty]))
+                P_post_ss, sigma_wc_ss, M_wc, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P, S, np.array([penalty]))
                 if status in ["infeasible", "unbounded"]:
                     #print(status)
                     return False
@@ -200,55 +202,81 @@ class inf_DRCE:
         x = np.random.rand(N, n)
         x = self.quad_inverse(x, wmax, wmin)
         return x.T
-    
-    def gen_sdp(self):
-            Sigma = cp.Variable((self.nx,self.nx), symmetric=True)
-            Y = cp.Variable((self.nx,self.nx))
-            X = cp.Variable((self.nx,self.nx), symmetric=True)
-            X_pred = cp.Variable((self.nx,self.nx), symmetric=True)
+
+    def create_DR_sdp(self):
+        X = cp.Variable((self.nx, self.nx), symmetric=True, name='X')
+        Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True, name='Sigma_wc')
+        Y = cp.Variable((self.nx,self.nx), name='Y')
+        X_pred = cp.Variable((self.nx,self.nx), symmetric=True, name='X_pred')
+        M_wc = cp.Variable((self.ny, self.ny), symmetric=True, name='M_wc')
+        Z = cp.Variable((self.ny, self.ny), name='Z')
         
-            P_var = cp.Parameter((self.nx,self.nx))
-            lambda_ = cp.Parameter(1)
-            S_var = cp.Parameter((self.nx,self.nx))
-            #Sigma_hat_12_var = cp.Parameter((self.nx,self.nx))
-            Sigma_hat = cp.Parameter((self.nx,self.nx))
-            #M_hat = cp.Parameter((self.ny,self.ny))
-            #X_bar = cp.Parameter((self.nx,self.nx))
-            
-            obj = cp.Maximize(cp.trace((P_var - lambda_*np.eye(self.nx)) @ Sigma) + 2*lambda_*cp.trace(Y) + cp.trace(S_var @ X))
-            
-            constraints = [
-                    cp.bmat([[Sigma_hat, Y],
-                         [Y.T, Sigma]
+        #Parameters
+        S_var = cp.Parameter((self.nx,self.nx), name='S_var')
+        P_var = cp.Parameter((self.nx,self.nx), name='P_var')
+        Lambda_ = cp.Parameter(1, name='Lambda_')
+        Sigma_w_hat = cp.Parameter((self.nx, self.nx), name='Sigma_w_hat') # nominal Sigma_w
+        M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')
+        radi = cp.Parameter(nonneg=True, name='radi')
+               
+        #use Schur Complements
+        #obj function
+        obj = cp.Maximize(cp.trace(S_var @ X) + cp.trace((P_var - Lambda_ * np.eye(self.nx)) @ Sigma_wc) + 2*Lambda_*cp.trace(Y)) 
+        
+        #constraints
+        constraints = [
+                cp.bmat([[Sigma_w_hat, Y],
+                         [Y.T, Sigma_wc]
                          ]) >> 0,
-                    Sigma >> 0,
-                    X_pred >> 0,
-                    cp.bmat([[X_pred - X, X_pred @ self.C.T],
-                             [self.C @ X_pred, self.C @ X_pred @ self.C.T + self.M_hat]
-                            ]) >> 0,        
-                    X_pred == self.A @ X @ self.A.T + Sigma,
-                    self.C @ X_pred @ self.C.T + self.M_hat >> 0,
-                    #Y >> 0,
-                    X >> 0
-                    ]
-            prob = cp.Problem(obj, constraints)
-            return prob
+                X_pred == self.A @ X @ self.A.T + Sigma_wc,
+                cp.bmat([[X_pred-X, X_pred @ self.C.T],
+                        [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_wc]
+                        ]) >> 0 ,
+                self.C @ X_pred @ self.C.T + M_wc >>0,
+                cp.trace(M_hat + M_wc - 2*Z ) <= radi**2,
+                cp.bmat([[M_hat, Z],
+                         [Z.T, M_wc]
+                         ]) >> 0,
+                X>>0,
+                X_pred >>0,
+                M_wc >>0,
+                Sigma_wc >>0
+                ]
         
+        prob = cp.Problem(obj, constraints)
+        return prob
         
-    def solve_sdp(self, sdp_prob, lambda_, P, S, Sigma_hat):
-        params = sdp_prob.parameters()
-        params[0].value = P
-        params[1].value = lambda_
-        params[2].value = S
-        params[3].value = Sigma_hat
-        
-        sdp_prob.solve(solver=cp.MOSEK)
-        Sigma = sdp_prob.variables()[0].value
-        cost = sdp_prob.value
-        status = sdp_prob.status
-        return Sigma, cost, status
     
-    def kalman_filter(self, v_mean_hat, M_hat, x, y, mu_w, u = None):
+    def solve_DR_sdp(self, prob, Lambda_, P_ss, S_ss, Sigma_hat, M_hat):
+        #construct problem
+        params = prob.parameters()
+        params[0].value = S_ss
+        params[1].value = P_ss
+        params[2].value = Lambda_
+        params[3].value = Sigma_hat
+        params[4].value = M_hat # Noise covariance
+        params[5].value = self.theta_v
+        
+        
+        prob.solve(solver=cp.MOSEK)
+        
+        if prob.status in ["infeasible", "unbounded"]:
+            print(prob.status, 'False in DRCE !!!!!!!!!!!!!')
+        
+        sol = prob.variables()
+        #['X', 'Sigma_wc', 'Y', 'X_pred', 'M_wc', 'Z']
+        
+        self.S_xx_opt = sol[3].value
+        self.S_xy_opt = self.S_xx_opt @ self.C.T
+        self.S_yy_opt = self.C @ self.S_xx_opt @ self.C.T + sol[4].value
+        M_wc_opt = sol[4].value 
+        #S_opt = S.value
+        Sigma_wc_opt = sol[1].value
+        cost = prob.value
+        status = prob.status
+        return  Sigma_wc_opt, M_wc_opt, cost, status
+    
+    def kalman_filter(self, v_mean_hat, x, y, mu_w, u = None):
         #Performs state estimation based on the current state estimate, control input and new observation
         if u is None:
             #Initial state estimate
@@ -259,19 +287,20 @@ class inf_DRCE:
 
         #Measurement update
         resid = y - (self.C @ x_ + v_mean_hat) 
-        temp = np.linalg.solve(M_hat, resid)
+        temp = np.linalg.solve(self.M_wc, resid)
         x_new = x_ + self.X_pred @ self.C.T @ temp
         return x_new
     
     def KF_riccati(self, X_pred, P_ss, S_ss, lambda_):
-        sdp_prob = self.gen_sdp()
-        sigma_wc_1, z_tilde__, stat_ = self.solve_sdp(sdp_prob, lambda_, P_ss, S_ss, self.Sigma_hat)
+        sdp_prob = self.create_DR_sdp()
+        sigma_wc_1, M_wc ,z_tilde__, stat_ = self.solve_DR_sdp(sdp_prob, lambda_,  P_ss, S_ss, self.Sigma_hat, self.M_hat)
         
         X_pred_ = X_pred
         for t in range(self.max_iteration):
-            X_pred_temp_ = self.A @ (X_pred_ - X_pred_ @ self.C.T @ np.linalg.solve(self.C @ X_pred_ @ self.C.T + self.M_hat, self.C @ X_pred_)) @ self.A.T + sigma_wc_1
-            if min(np.linalg.eigvals(self.C @ X_pred_temp_ @ self.C.T + self.M_hat)) <= 0:
-                    return np.inf
+            X_pred_temp_ = self.A @ (X_pred_ - X_pred_ @ self.C.T @ np.linalg.solve(self.C @ X_pred_ @ self.C.T + M_wc, self.C @ X_pred_)) @ self.A.T + sigma_wc_1
+            if min(np.linalg.eigvals(self.C @ X_pred_temp_ @ self.C.T + M_wc)) <= 0:
+                print("error in KF_riccati !!!")    
+                return np.inf
     
             max_diff = 0
             for row in range(len(X_pred_)):
@@ -279,16 +308,16 @@ class inf_DRCE:
                    if abs(X_pred_[row, col] - X_pred_temp_[row, col]) > max_diff:
                        max_diff = X_pred_[row, col] - X_pred_temp_[row, col]
             X_pred_ = X_pred_temp_
-            X_post_ = X_pred_ - X_pred_ @ self.C.T @ np.linalg.solve(self.C @ X_pred_ @ self.C.T + self.M_hat, self.C @ X_pred_)
+            X_post_ = X_pred_ - X_pred_ @ self.C.T @ np.linalg.solve(self.C @ X_pred_ @ self.C.T + M_wc, self.C @ X_pred_)
             
             #print("X_post_", np.linalg.norm(X_post_), "/ max_diff : ", max_diff)
             if abs(max_diff) < self.error_bound:
                 if np.linalg.matrix_rank(control.ctrb(self.A, scipy.linalg.sqrtm(sigma_wc_1))) < self.nx:
                         print('(A, sqrt(Sigma)) is not controllable!!!!!!')
                         stat_ = "infeasible"
-                return X_post_, sigma_wc_1, z_tilde__, stat_
+                return X_post_, sigma_wc_1, M_wc, z_tilde__, stat_
             
-        return X_post_, sigma_wc_1, z_tilde__, stat_
+        return X_post_, sigma_wc_1, M_wc, z_tilde__, stat_
 
     def riccati(self, Phi, P, S, r, z, Sigma_hat, mu_hat, lambda_, t):
         #Riccati equation corresponding to the Theorem 1
@@ -360,9 +389,10 @@ class inf_DRCE:
                 self.max_it_P = t
                 self.P_list[t+1:,:,:] = P
                 self.S_list[t+1:,:,:] = S
-                P_post, sigma_wc, z_tilde_, status = self.KF_riccati(self.x0_cov_hat, self.P_ss, self.S_ss, self.lambda_)
+                P_post, sigma_wc, M_wc, z_tilde_, status = self.KF_riccati(self.x0_cov_hat, self.P_ss, self.S_ss, self.lambda_)
                 self.X_pred = P_post
                 self.sigma_wc = sigma_wc
+                self.M_wc = M_wc
                 self.z_tilde = z_tilde_
                 return
             
@@ -405,7 +435,7 @@ class inf_DRCE:
         elif self.noise_dist=="quadratic":
             true_v = self.quadratic(self.v_max, self.v_min) #observation noise
         y[0] = self.get_obs(x[0], true_v) #initial observation
-        x_mean[0] = self.kalman_filter(self.v_mean_hat, self.M_hat, self.x0_mean_hat, y[0], self.mu_hat) #initial state estimation
+        x_mean[0] = self.kalman_filter(self.v_mean_hat, self.x0_mean_hat, y[0], self.mu_hat) #initial state estimation
 
         for t in range(self.T):
             mu_wc[t] = self.H_ss @ x_mean[t] + self.h_ss #worst-case mean
@@ -431,7 +461,7 @@ class inf_DRCE:
             y[t+1] = self.get_obs(x[t+1], true_v)
 
             #Update the state estimation (using the worst-case mean and covariance)
-            x_mean[t+1] = self.kalman_filter(self.v_mean_hat, self.M_hat, x_mean[t],  y[t+1], mu_wc[t], u=u[t])
+            x_mean[t+1] = self.kalman_filter(self.v_mean_hat, x_mean[t],  y[t+1], mu_wc[t], u=u[t])
 
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]

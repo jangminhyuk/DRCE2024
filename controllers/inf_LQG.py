@@ -239,7 +239,7 @@ class inf_LQG:
             elif self.noise_dist=="quadratic":
                 true_v = self.quadratic(self.v_max, self.v_min) #observation noise
             #Apply the control input to the system
-            u[t] = self.K[t] @ x_mean[t] + self.L[t]
+            u[t] = self.K_ss @ x_mean[t] + self.L_ss
             x[t+1] = self.A @ x[t] + self.B @ u[t] + true_w
             y[t+1] = self.get_obs(x[t+1], true_v)
 
