@@ -195,14 +195,6 @@ class inf_LQG:
         self.r_ss = r
         self.K_ss = None
         self.L_ss = None
-        
-        # for t in range(self.T-1, -1, -1):
-        #      self.P[t], self.S[t], self.r[t], self.z[t], self.K[t], self.L[t]  = self.riccati(Phi, self.P[t+1], self.S[t+1], self.r[t+1], self.z[t+1], self.Sigma_hat[t], self.mu_hat[t])
-        
-        # self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
-        # self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
-        # for t in range(self.T):
-        #     self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t])
             
     def forward(self):
         #Apply the controller forward in time.

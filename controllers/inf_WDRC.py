@@ -68,17 +68,6 @@ class inf_WDRC:
         self.Phi = self.B @ np.linalg.inv(self.R) @ self.B.T - 1/self.lambda_ * np.eye(self.nx)
         self.flag= True
         
-        # self.P = np.zeros((self.T+1, self.nx, self.nx))
-        # self.S = np.zeros((self.T+1, self.nx, self.nx))
-        # self.r = np.zeros((self.T+1, self.nx, 1))
-        # self.z = np.zeros(self.T+1)
-        # self.K = np.zeros(( self.T, self.nu, self.nx))
-        # self.L = np.zeros(( self.T, self.nu, 1))
-        # self.H = np.zeros(( self.T, self.nx, self.nx))
-        # self.h = np.zeros(( self.T, self.nx, 1))
-        # self.g = np.zeros(( self.T, self.nx, self.nx))
-        
-        #self.sdp_prob_ = self.gen_sdp(self.lambda_, self.M_hat)
     
     def optimize_penalty(self):
         # Find inf_penalty (infimum value of penalty coefficient satisfying Assumption 1)
@@ -86,7 +75,7 @@ class inf_WDRC:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='BFGS', options={'eps': 1e-4 , 'disp': False, 'maxiter': 2000})  
+        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='Nelder-Mead', options={'disp': False, 'maxiter': 100, 'ftol': 1e-7})
         optimal_penalty = output.x
         print("inf WDRC Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
@@ -129,7 +118,7 @@ class inf_WDRC:
                     return np.inf
                 rho = (2*self.mu_hat - Phi @ r_ss).T @ temp @ r_ss - penalty* np.trace(self.Sigma_hat) + self.mu_hat.T @ temp @ P_ss @ self.mu_hat + z_tilde_ss
 #                print('Lambda: ', penalty, 'Objective: ', penalty*self.theta**2 + rho[0])
-                return penalty*self.theta**2 + rho[0]
+                return penalty*self.theta_w**2 + rho[0]
     
     def binarysearch_infimum_penalty_finite(self):
         left = 0
@@ -169,9 +158,7 @@ class inf_WDRC:
             r = r_temp
             z = z_temp
             if max_diff < self.error_bound:
-#                sdp_prob = self.gen_sdp(penalty)
-                #print(np.max(np.linalg.eigvals(self.x0_cov)))
-                P_post_ss, sigma_wc_ss, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P, S, penalty)
+                P_post_ss, sigma_wc_ss, z_tilde_ss, status = self.KF_riccati(self.x0_cov_hat, P, S, np.array([penalty]))
                 if status in ["infeasible", "unbounded"]:
                     #print(status)
                     return False
@@ -417,12 +404,11 @@ class inf_WDRC:
             true_v = self.uniform(self.v_max, self.v_min) #observation noise
         elif self.noise_dist=="quadratic":
             true_v = self.quadratic(self.v_max, self.v_min) #observation noise
-            
         y[0] = self.get_obs(x[0], true_v) #initial observation
-        x_mean[0] = self.kalman_filter(self.v_mean_hat, self.M_hat, self.x0_mean_hat, y[0]) #initial state estimation
+        x_mean[0] = self.kalman_filter(self.v_mean_hat, self.M_hat, self.x0_mean_hat, y[0], self.mu_hat) #initial state estimation
 
         for t in range(self.T):
-            mu_wc[t] = self.H[t] @ x_mean[t] + self.h[t] #worst-case mean
+            mu_wc[t] = self.H_ss @ x_mean[t] + self.h_ss #worst-case mean
             
             #disturbance sampling
             if self.dist=="normal":
@@ -440,7 +426,7 @@ class inf_WDRC:
                 true_v = self.quadratic(self.v_max, self.v_min) #observation noise
 
             #Apply the control input to the system
-            u[t] = self.K[t] @ x_mean[t] + self.L[t]
+            u[t] = self.K_ss @ x_mean[t] + self.L_ss
             x[t+1] = self.A @ x[t] + self.B @ u[t] + true_w
             y[t+1] = self.get_obs(x[t+1], true_v)
 
