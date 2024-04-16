@@ -52,7 +52,7 @@ class DRCE:
             self.true_v_init = self.uniform(self.v_max, self.v_min) #observation noise
         elif self.noise_dist=="quadratic":
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
-        
+        self.previous = self.M_hat
         self.theta_w = theta_w
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
