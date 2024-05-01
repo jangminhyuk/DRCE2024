@@ -52,7 +52,8 @@ class DRCE:
             self.true_v_init = self.uniform(self.v_max, self.v_min) #observation noise
         elif self.noise_dist=="quadratic":
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
-        self.previous = self.M_hat
+        self.previousM = self.M_hat
+        self.previousX = self.x0_cov_hat
         self.theta_w = theta_w
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
@@ -267,6 +268,19 @@ class DRCE:
         S_xx_opt = sol[3].value
         S_xy_opt = S_xx_opt @ self.C.T
         S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
+        
+        if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
+            print("Previous Mopt is larger !")
+        if np.min(np.linalg.eigvals( sol[4].value - self.previousM)>0):
+            print("Next Mopt is larger !")
+        if np.min(np.linalg.eigvals( self.previousX - sol[0].value )>0):
+            print("Previous X_post is larger !")
+        if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
+            print("Next X_post is larger !")
+        print("M_opt norm : ", np.linalg.norm(sol[4].value))
+        print("X_post norm : " , np.linalg.norm(sol[0].value))
+        self.previousX = sol[0].value
+        self.previousM = sol[4].value
         #S_opt = S.value
         Sigma_wc_opt = sol[1].value
         cost = prob.value
@@ -365,7 +379,7 @@ class DRCE:
         #Performs state estimation based on the current state estimate, control input and new observation
         S_xx, S_xy, S_yy, cost = self.solve_DR_sdp_initial(self.DR_sdp_init, M_hat, X_cov)
         
-        X_cov_new = S_xx
+        X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
         return X_cov_new, S_xx, S_xy, S_yy, cost
     
     def riccati(self, Phi, P, S, r, z, Sigma_hat, mu_hat, lambda_, t):

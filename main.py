@@ -124,7 +124,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
         theta_w_list = [1.0]
-        theta_v_list = [5.0]
+        theta_v_list = [10]
         theta_x0 = 1.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [0.5]
