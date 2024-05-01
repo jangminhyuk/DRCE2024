@@ -7,8 +7,8 @@ from scipy.optimize import minimize
 import cvxpy as cp
 import scipy
 
-# Distributionally Robust Control and Estimation
-class DRCE:
+# Distributionally Robust Control with DRMMSE
+class DRCMMSE:
     def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
         self.noise_dist = noise_dist
@@ -57,11 +57,12 @@ class DRCE:
         self.theta_w = theta_w
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
+        self.theta_x = theta_x0 # Only for DRCMMSE !!!!!!
         self.lambda_ = lambda_
         
         self.DR_sdp = self.create_DR_sdp()
         self.DR_sdp_init = self.create_DR_sdp_initial()
-        print("DRCE")
+        print("DRCMMSE")
         if use_lambda==True: # Use given Lambda!!
             self.lambda_ = np.array([lambda_])
         else:
@@ -88,7 +89,7 @@ class DRCE:
         output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='BFGS', options={'eps': 1e-5 , 'disp': False, 'maxiter': 20000})
 
         optimal_penalty = output.x
-        print("DRCE Optimal penalty (lambda_star):", optimal_penalty[0])
+        print("DRCMMSE Optimal penalty (lambda_star):", optimal_penalty[0])
         print(optimal_penalty)
         return optimal_penalty
 
@@ -205,9 +206,11 @@ class DRCE:
         V = cp.Variable((self.nx, self.nx), symmetric=True, name='V')
         Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True, name='Sigma_wc')
         Y = cp.Variable((self.nx,self.nx), name='Y')
+        X_hat = cp.Variable((self.nx,self.nx), symmetric=True, name='X_hat')
         X_pred = cp.Variable((self.nx,self.nx), symmetric=True, name='X_pred')
         M_test = cp.Variable((self.ny, self.ny), symmetric=True, name='M_test')
         Z = cp.Variable((self.ny, self.ny), name='Z')
+        L = cp.Variable((self.nx,self.nx), name='L')
         
         #Parameters
         S_var = cp.Parameter((self.nx,self.nx), name='S_var')
@@ -217,7 +220,8 @@ class DRCE:
         x_cov = cp.Parameter((self.nx, self.nx), name='x_cov') # x_cov from before time step
         M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')
         radi = cp.Parameter(nonneg=True, name='radi')
-               
+        radi_x = cp.Parameter(nonneg=True, name='radi_x')
+        
         #use Schur Complements
         #obj function
         obj = cp.Maximize(cp.trace(S_var @ V) + cp.trace((P_var - Lambda_ * np.eye(self.nx)) @ Sigma_wc) + 2*Lambda_*cp.trace(Y)) 
@@ -227,15 +231,20 @@ class DRCE:
                 cp.bmat([[Sigma_w, Y],
                          [Y.T, Sigma_wc]
                          ]) >> 0,
-                X_pred == self.A @ x_cov @ self.A.T + Sigma_wc,
+                X_hat == self.A @ x_cov @ self.A.T + Sigma_wc,
                 cp.bmat([[X_pred-V, X_pred @ self.C.T],
                         [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_test]
                         ]) >> 0 ,
                 self.C @ X_pred @ self.C.T + M_test >>0,
                 cp.trace(M_hat + M_test - 2*Z ) <= radi**2,
+                cp.trace(X_hat + X_pred - 2*L ) <= radi_x**2,
+                cp.bmat([[X_hat, L],
+                         [L.T, X_pred]
+                         ]) >> 0,
                 cp.bmat([[M_hat, Z],
                          [Z.T, M_test]
                          ]) >> 0,
+                X_hat >>0,
                 V>>0,
                 X_pred >>0,
                 M_test >>0,
@@ -255,19 +264,22 @@ class DRCE:
         params[4].value = X_cov
         params[5].value = M # Noise covariance
         params[6].value = theta
+        params[7].value = self.theta_x
         
         
         prob.solve(solver=cp.MOSEK)
         
         if prob.status in ["infeasible", "unbounded"]:
-            print(prob.status, 'False in DRKF combined!!!!!!!!!!!!!')
+            print(prob.status, 'False in DRCMMSE combined!!!!!!!!!!!!!')
         
         sol = prob.variables()
-        #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z']
+        #['V', 'Sigma_wc', 'Y', 'X_hat', 'X_pred', 'M_test', 'Z', 'L']
         #print(sol)
-        S_xx_opt = sol[3].value
+        S_xx_opt = sol[4].value
         S_xy_opt = S_xx_opt @ self.C.T
-        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
+        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[5].value
+        
+        #print("S_yy_opt norm: ",np.linalg.norm(S_yy_opt))
         
         # if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
         #     print("Previous Mopt is larger !")
@@ -430,7 +442,7 @@ class DRCE:
         #print(self.v_mean_hat[0])
         self.x_cov[0], self.S_xx[0], self.S_xy[0], self.S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
         for t in range(self.T):
-            print("DRCE Offline step : ",t,"/",self.T)
+            print("DRCMMSE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
             
 
