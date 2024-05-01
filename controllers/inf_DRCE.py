@@ -77,7 +77,7 @@ class inf_DRCE:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='Nelder-Mead', options={'disp': False, 'maxiter': 1000, 'ftol': 1e-7})
+        output = minimize(self.objective, x0=np.array([2*self.infimum_penalty]), method='Nelder-Mead', options={'disp': False, 'maxiter': 1000})
         optimal_penalty = output.x
         print("inf WDRCE Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
