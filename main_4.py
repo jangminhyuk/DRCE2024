@@ -120,7 +120,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     use_lambda = True
     lambda_ = 10 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
-    noisedist = ["normal", "uniform", "quadratic"]
+    #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
@@ -388,14 +388,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     
     if noise_plot_results:
         if infinite:
-            print("For noise sample size effect plot : Use python plot_J.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("For noise sample size effect plot : Use python plot_J4.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("For noise sample size effect plot : Use python plot_J.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("For noise sample size effect plot : Use python plot_J4.py --dist "+ dist + " --noise_dist " + noise_dist)
     else:
         if infinite:
-            print("For plot : Use python plot.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("For plot : Use python plot4.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("For plot : Use python plot.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("For plot : Use python plot4.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 

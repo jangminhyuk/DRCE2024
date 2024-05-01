@@ -57,7 +57,7 @@ class DRCMMSE:
         self.theta_w = theta_w
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
-        self.theta_x = 1.0 # Only for DRCMMSE !!!!!!
+        self.theta_x = 2 # Only for DRCMMSE !!!!!!
         self.lambda_ = lambda_
         
         self.DR_sdp = self.create_DR_sdp()
@@ -206,11 +206,11 @@ class DRCMMSE:
         V = cp.Variable((self.nx, self.nx), symmetric=True, name='V')
         Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True, name='Sigma_wc')
         Y = cp.Variable((self.nx,self.nx), name='Y')
+        X_hat = cp.Variable((self.nx,self.nx), symmetric=True, name='X_hat')
         X_pred = cp.Variable((self.nx,self.nx), symmetric=True, name='X_pred')
         M_test = cp.Variable((self.ny, self.ny), symmetric=True, name='M_test')
         Z = cp.Variable((self.ny, self.ny), name='Z')
         L = cp.Variable((self.nx,self.nx), name='L')
-        X_hat = cp.Variable((self.nx,self.nx), symmetric=True, name='X_hat')
         
         #Parameters
         S_var = cp.Parameter((self.nx,self.nx), name='S_var')
@@ -221,7 +221,7 @@ class DRCMMSE:
         M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')
         radi = cp.Parameter(nonneg=True, name='radi')
         radi_x = cp.Parameter(nonneg=True, name='radi_x')
-               
+        
         #use Schur Complements
         #obj function
         obj = cp.Maximize(cp.trace(S_var @ V) + cp.trace((P_var - Lambda_ * np.eye(self.nx)) @ Sigma_wc) + 2*Lambda_*cp.trace(Y)) 
@@ -236,8 +236,8 @@ class DRCMMSE:
                         [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_test]
                         ]) >> 0 ,
                 self.C @ X_pred @ self.C.T + M_test >>0,
-                cp.trace(X_hat + X_pred - 2*L ) <= radi_x**2,
                 cp.trace(M_hat + M_test - 2*Z ) <= radi**2,
+                cp.trace(X_hat + X_pred - 2*L ) <= radi_x**2,
                 cp.bmat([[X_hat, L],
                          [L.T, X_pred]
                          ]) >> 0,
@@ -257,7 +257,6 @@ class DRCMMSE:
     def solve_DR_sdp(self, prob, P_t1, S_t1, M, X_cov, Sigma_hat, theta, Lambda_):
         #construct problem
         params = prob.parameters()
-        print(params)
         params[0].value = S_t1 # S[t+1]
         params[1].value = P_t1 # P[t+1]
         params[2].value = Lambda_
@@ -274,11 +273,13 @@ class DRCMMSE:
             print(prob.status, 'False in DRCMMSE combined!!!!!!!!!!!!!')
         
         sol = prob.variables()
-        #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z', 'L', 'X_hat']
-        
-        S_xx_opt = sol[3].value
+        #['V', 'Sigma_wc', 'Y', 'X_hat', 'X_pred', 'M_test', 'Z', 'L']
+        #print(sol)
+        S_xx_opt = sol[4].value
         S_xy_opt = S_xx_opt @ self.C.T
-        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
+        S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[5].value
+        
+        #print("S_yy_opt norm: ",np.linalg.norm(S_yy_opt))
         
         # if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
         #     print("Previous Mopt is larger !")

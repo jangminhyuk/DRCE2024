@@ -264,23 +264,23 @@ class DRCE:
         
         sol = prob.variables()
         #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z']
-        
+        #print(sol)
         S_xx_opt = sol[3].value
         S_xy_opt = S_xx_opt @ self.C.T
         S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
         
-        if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
-            print("Previous Mopt is larger !")
-        if np.min(np.linalg.eigvals( sol[4].value - self.previousM)>0):
-            print("Next Mopt is larger !")
-        if np.min(np.linalg.eigvals( self.previousX - sol[0].value )>0):
-            print("Previous X_post is larger !")
-        if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
-            print("Next X_post is larger !")
-        print("M_opt norm : ", np.linalg.norm(sol[4].value))
-        print("X_post norm : " , np.linalg.norm(sol[0].value))
-        self.previousX = sol[0].value
-        self.previousM = sol[4].value
+        # if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
+        #     print("Previous Mopt is larger !")
+        # if np.min(np.linalg.eigvals( sol[4].value - self.previousM)>0):
+        #     print("Next Mopt is larger !")
+        # if np.min(np.linalg.eigvals( self.previousX - sol[0].value )>0):
+        #     print("Previous X_post is larger !")
+        # if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
+        #     print("Next X_post is larger !")
+        # print("M_opt norm : ", np.linalg.norm(sol[4].value))
+        # print("X_post norm : " , np.linalg.norm(sol[0].value))
+        # self.previousX = sol[0].value
+        # self.previousM = sol[4].value
         #S_opt = S.value
         Sigma_wc_opt = sol[1].value
         cost = prob.value
