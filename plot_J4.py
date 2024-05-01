@@ -14,12 +14,12 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     J_lqr_mean = np.array(avg_cost_lqg[0:])
     J_wdrc_mean = np.array(avg_cost_wdrc[0:])
     J_drce_mean = np.array(avg_cost_drce[0:])
-    J_drcmmse_mean = np.array(avg_cost_drce[0:])
+    J_drcmmse_mean = np.array(avg_cost_drcmmse[0:])
     
     J_lqr_std = np.array(std_cost_lqg[0:])
     J_wdrc_std = np.array(std_cost_wdrc[0:])
     J_drce_std = np.array(std_cost_drce[0:])
-    J_drcmmse_std = np.array(std_cost_drce[0:])
+    J_drcmmse_std = np.array(std_cost_drcmmse[0:])
     
     fig = plt.figure(figsize=(6,4), dpi=300)
     
@@ -30,11 +30,12 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     plt.plot(t, J_wdrc_mean, 'tab:blue', label='WDRC')
     plt.fill_between(t, J_wdrc_mean + 0.25*J_wdrc_std, J_wdrc_mean - 0.25*J_wdrc_std, facecolor='tab:blue', alpha=0.3)
     
+    plt.plot(t, J_drcmmse_mean, 'tab:purple', label='WDRC-DRMMSE')
+    plt.fill_between(t, J_drcmmse_mean + 0.25*J_drcmmse_std, J_drcmmse_mean - 0.25*J_drcmmse_std, facecolor='tab:purple', alpha=0.3)
+    
     plt.plot(t, J_drce_mean, 'tab:green', label='WDR-CE')
     plt.fill_between(t, J_drce_mean + 0.25*J_drce_std, J_drce_mean - 0.25*J_drce_std, facecolor='tab:green', alpha=0.3)
     
-    plt.plot(t, J_drcmmse_mean, 'tab:purple', label='WDRC-DRMMSE')
-    plt.fill_between(t, J_drcmmse_mean + 0.25*J_drcmmse_std, J_drcmmse_mean - 0.25*J_drcmmse_std, facecolor='tab:purple', alpha=0.3)
     
     plt.xlabel(r'Sample Size', fontsize=16)
     plt.ylabel(r'Total Cost', fontsize=16)
@@ -69,12 +70,13 @@ if __name__ == "__main__":
     
     avg_cost_lqg_file.close()
     std_cost_lqg_file = open(path + '/lqg_std.pkl', 'rb' )
+    print("avg_cost_lqg : ",avg_cost_lqg)
     std_cost_lqg = pickle.load(std_cost_lqg_file)
     std_cost_lqg_file.close()
     
     avg_cost_wdrc_file = open(path + '/wdrc_mean.pkl', 'rb' )
     avg_cost_wdrc = pickle.load(avg_cost_wdrc_file)
-    #print(avg_cost_wdrc)
+    print("avg_cost_wdrc : ",avg_cost_wdrc)
     avg_cost_wdrc_file.close()
     std_cost_wdrc_file = open(path + '/wdrc_std.pkl', 'rb' )
     std_cost_wdrc = pickle.load(std_cost_wdrc_file)
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     
     avg_cost_drce_file = open(path + '/drce_mean.pkl', 'rb' )
     avg_cost_drce = pickle.load(avg_cost_drce_file)
-    #print(avg_cost_drkf_wdrc)
+    print("avg_cost_drce : ",avg_cost_drce)
     avg_cost_drce_file.close()
     std_cost_drce_file = open(path + '/drce_std.pkl', 'rb' )
     std_cost_drce = pickle.load(std_cost_drce_file)
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     
     avg_cost_drcmmse_file = open(path + '/drcmmse_mean.pkl', 'rb' )
     avg_cost_drcmmse = pickle.load(avg_cost_drcmmse_file)
-    #print(avg_cost_drkf_wdrc)
+    print("avg_cost_drcmmse : ",avg_cost_drcmmse)
     avg_cost_drcmmse_file.close()
     std_cost_drcmmse_file = open(path + '/drcmmse_std.pkl', 'rb' )
     std_cost_drcmmse = pickle.load(std_cost_drcmmse_file)
