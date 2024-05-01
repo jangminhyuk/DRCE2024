@@ -384,7 +384,7 @@ class DRCMMSE:
         S_xx, S_xy, S_yy, Sigma_wc, cost = self.solve_DR_sdp(self.DR_sdp, P, S, M_hat, X_cov, Sigma_hat, theta, Lambda)
         
         X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
-        print("Xcov : ",np.linalg.norm(X_cov_new))
+        #print("Xcov : ",np.linalg.norm(X_cov_new))
         return X_cov_new, S_xx, S_xy, S_yy, Sigma_wc, cost
     
     def DR_kalman_filter_cov_initial(self, M_hat, X_cov): #DRKF !!

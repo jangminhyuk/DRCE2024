@@ -117,20 +117,20 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = True
+    use_lambda = False
     lambda_ = 10 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [1.0]
+        theta_w_list = [2.0]
         theta_v_list = [5]
         theta_x0 = 20 # radius of initial state ambiguity set
     elif dist == "quadratic":
-        theta_w_list = [0.5]
+        theta_w_list = [1.0]
         theta_v_list = [5.0]
-        theta_x0 = 0.5
+        theta_x0 = 1.0
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
@@ -173,9 +173,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 0.5*np.ones(nx)
+                        x0_max = 2.0*np.ones(nx)
                         x0_min = 0.0*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
+                        x0_mean[-1] = -1.0
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
                     elif dist =="uniform":
                         #disturbance distribution parameters
