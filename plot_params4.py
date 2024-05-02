@@ -259,11 +259,11 @@ if __name__ == "__main__":
     # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
     theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0] 
+    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0] 
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-    lambda_list = [800, 1000, 1250, 1500, 2000]
-    lambda_list = [100, 125, 150, 200, 250] 
+    lambda_list =[30, 35, 40, 45, 50]
+
     # Regular expression pattern to extract numbers from file names
     
     

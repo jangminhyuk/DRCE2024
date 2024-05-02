@@ -102,33 +102,59 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 4 # num x0 samples 
+    num_x0_samples = 10 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 4 #state dimension
-    nu = 2 #control input dimension
-    ny = 2#output dimension
-    A = np.array([[0.9801, 0.0003, -0.098, 0.0038],
-                 [-0.3868, 0.9071, 0.0471, -0.0008],
-                 [0.1591, -0.0015, 0.9691, 0.0003],
-                 [-0.0198, 0.0958, 0.0021, 1.0]])
-    B = np.array([[-0.0001, 0.0058],
-                 [0.0296, 0.0153],
-                 [0.0012, -0.0908],
-                 [0.0015, 0.0008]])
-    C = np.array([[1,0,0,0],
-                 [0,0,0,1]])
-    Q = Qf = np.eye(nx)
-    R = np.eye(nu)
+    nx = 8 #state dimension
+    nu = 1 #control input dimension
+    ny = 1#output dimension
+    A=np.array([[0.5623 ,-0.01642, 0.01287,-0.0161 , 0.02094,-0.02988, 0.0183 , 0.008743],
+    [0.102  , 0.6114 ,-0.02468, 0.02468,-0.03005, 0.04195,-0.02559, 0.03889 ],
+    [0.1361 , 0.2523 , 0.641  ,-0.03404, 0.03292,-0.04296, 0.02588, 0.08467 ],
+    [0.09951, 0.2859 , 0.3476 , 0.6457 ,-0.03249, 0.03316,-0.01913, 0.1103  ],
+    [-0.04794, 0.08708, 0.3297 , 0.3102 , 0.6201 ,-0.03015, 0.01547, 0.08457 ],
+    [-0.1373 ,-0.1224 , 0.1705 , 0.3106 , 0.191  , 0.5815 ,-0.01274, 0.05394 ],
+    [-0.1497 ,-0.1692 , 0.1165 , 0.2962 , 0.1979 , 0.07631, 0.5242 , 0.04702 ],
+    [0      , 0      , 0      , 0      , 0      , 0      , 0      , 0.6065  ]])
     
+    B=np.array([[-0.1774],[-0.2156],[-0.2194],[-0.09543], [0.0579], [0.09303], [0.08962],[0]])
+    C=np.array([[-0.0049 , 0.0049 ,-0.006 , 0.01 , 0.0263 , 0.3416 , 0.6759 , 0]])
+
+    Q = Qf = np.eye(8)
+    R  = np.eye(1) 
+    
+    
+    # nx = 7 #state dimension
+    # nu = 2 #control input dimension
+    # ny = 4#output dimension
+    # A = np.array([[-0.117, 0.0386, -0.000295, -0.996, 0, 0.02, 0],
+    #               [0, 0, 1, 0, 0, 0, 0],
+    #               [-5.2, 0, -1, 0.249, -1.12, 0.337, 0],
+    #               [1.54, 0, -0.0042, -0.154, -0.032, -0.744, 0],
+    #               [0, 0, 0, 0, -25, 0, 0],
+    #               [0, 0, 0, 0, 0, -20, 0],
+    #               [0, 0, 0, 0.5, 0, 0, -0.5]])
+    # B = np.array([[0, 0],
+    #               [0, 0],
+    #               [0, 0],
+    #               [0, 0],
+    #               [25,0],
+    #               [0, 20],
+    #               [0, 0]])
+    # C = np.array([[0, 0, 0, 1, 0, 0, -1],
+    #               [0, 0, 1, 0, 0, 0, 0],
+    #               [1, 0, 0, 0, 0, 0, 0],
+    #               [0, 1, 0, 0, 0, 0, 0]])
+    # Q = Qf = 1*np.eye(7)
+    # R  = np.eye(2) 
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = True
-    lambda_ = 150 # will not be used if the parameter "use_lambda = False"
+    use_lambda = False
+    lambda_ = 200 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
@@ -139,8 +165,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_x0 = 1.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
-        theta_v_list = [5.0]
-        theta_x0 = 5.0
+        theta_v_list = [1.0]
+        theta_x0 = 1.0
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
@@ -208,8 +234,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         M = 0.2*np.eye(ny) #observation noise covariance
                         mu_v = 0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -1.0*np.ones(ny)
-                        v_max = 3.0*np.ones(ny)
+                        v_min = -0.5*np.ones(ny)
+                        v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -416,8 +442,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=4, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=4, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot

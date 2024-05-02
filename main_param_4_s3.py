@@ -111,33 +111,49 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean =[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 4 #state dimension
+    nx = 7 #state dimension
     nu = 2 #control input dimension
-    ny = 2#output dimension
-    A = np.array([[0.9801, 0.0003, -0.098, 0.0038],
-                 [-0.3868, 0.9071, 0.0471, -0.0008],
-                 [0.1591, -0.0015, 0.9691, 0.0003],
-                 [-0.0198, 0.0958, 0.0021, 1.0]])
-    B = np.array([[-0.0001, 0.0058],
-                 [0.0296, 0.0153],
-                 [0.0012, -0.0908],
-                 [0.0015, 0.0008]])
-    C = np.array([[1,0,0,0],
-                 [0,0,0,1]])
-    Q = Qf = np.eye(nx)
-    R = np.eye(nu)
+    ny = 4#output dimension
+    A = np.array([[-0.117, 0.0386, -0.000295, -0.996, 0, 0.02, 0],
+                  [0, 0, 1, 0, 0, 0, 0],
+                  [-5.2, 0, -1, 0.249, -1.12, 0.337, 0],
+                  [1.54, 0, -0.0042, -0.154, -0.032, -0.744, 0],
+                  [0, 0, 0, 0, -25, 0, 0],
+                  [0, 0, 0, 0, 0, -20, 0],
+                  [0, 0, 0, 0.5, 0, 0, -0.5]])
+    B = np.array([[0, 0],
+                  [0, 0],
+                  [0, 0],
+                  [0, 0],
+                  [25,0],
+                  [0, 20],
+                  [0, 0]])
+    C = np.array([[0, 0, 0, 1, 0, 0, -1],
+                  [0, 0, 1, 0, 0, 0, 0],
+                  [1, 0, 0, 0, 0, 0, 0],
+                  [0, 1, 0, 0, 0, 0, 0]])
+    Q = Qf = np.eye(7)
+    R  = np.eye(2) 
+    # nx = 10 #state dimension
+    # nu = 10 #control input dimension
+    # ny = 8#output dimension
+    # temp = np.ones((nx, nx))
+    # A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    # Q = Qf = np.eye(10)
+    # B = R  = np.eye(10) 
+    # C = np.vstack([np.hstack([np.eye(4) , np.zeros((4,6))]), np.hstack([np.zeros((4,6)), np.eye(4)])]) 
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
+    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    lambda_list = [100, 125, 150, 200, 250] # disturbance distribution penalty parameter
+    lambda_list = [30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     #theta_v_list = [5.0]
     #lambda_list = [6]
-    theta_x0 = 2.0 # radius of initial state ambiguity set  
+    theta_x0 = 4.0 # radius of initial state ambiguity set  
     use_lambda = True # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
@@ -180,7 +196,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         w_max = None
                         w_min = None
                         mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 2.0*np.eye(nx)
+                        Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -189,7 +205,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 2.0*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
