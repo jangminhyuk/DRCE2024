@@ -88,7 +88,12 @@ def gen_sample_dist_inf(dist, N_sample, mu_w=None, Sigma_w=None, w_max=None, w_m
     mean_ = np.average(w, axis = 1)[...,np.newaxis]
     var_ = np.cov(w)
     return mean_, var_
+def create_matrices(nx, ny, nu):
+    A = np.load("./inputs/A.npy") # (n x n) matrix
+    B = np.load("./inputs/B.npy")
+    C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
 
+    return A, B, C
 
 def save_data(path, data):
     output = open(path, 'wb')
@@ -107,30 +112,32 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 10 #state dimension
+    nx = 20 #state dimension
     nu = 10 #control input dimension
-    ny = 10#output dimension
-    temp = np.ones((nx, nx))
-    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
-    B = C = Q = R = Qf = np.eye(10) 
+    ny = 12#output dimension
+    A, B, C = create_matrices(nx, ny, nu) #system matrices generation
+    #cost weights
+    Q = np.load("./inputs/Q.npy")
+    Qf = np.load("./inputs/Q_f.npy")    
+    R = np.load("./inputs/R.npy")
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
-    lambda_ = 10 # will not be used if the parameter "use_lambda = False"
+    use_lambda = True
+    lambda_ = 1000 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
         theta_w_list = [2.0]
-        theta_v_list = [5]
-        theta_x0 = 20 # radius of initial state ambiguity set
+        theta_v_list = [5.0]
+        theta_x0 = 5.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
         theta_v_list = [5.0]
-        theta_x0 = 1.0
+        theta_x0 = 5.0
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
@@ -169,7 +176,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
+                        w_max = 1.5*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
@@ -195,7 +202,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
+                        M = 1.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
@@ -406,7 +413,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+

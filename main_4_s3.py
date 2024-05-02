@@ -102,17 +102,34 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 15 # num x0 samples 
+    num_x0_samples = 4 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 10 #state dimension
-    nu = 10 #control input dimension
-    ny = 10#output dimension
-    temp = np.ones((nx, nx))
-    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
-    B = C = Q = R = Qf = np.eye(10) 
+    nx = 4 #state dimension
+    nu = 2 #control input dimension
+    ny = 2#output dimension
+    A = np.array([[0.9801, 0.0003, -0.098, 0.0038],
+                 [-0.3868, 0.9071, 0.0471, -0.0008],
+                 [0.1591, -0.0015, 0.9691, 0.0003],
+                 [-0.0198, 0.0958, 0.0021, 1.0]])
+    B = np.array([[-0.0001, 0.0058],
+                 [0.0296, 0.0153],
+                 [0.0012, -0.0908],
+                 [0.0015, 0.0008]])
+    C = np.array([[1,0,0,0],
+                 [0,0,0,1]])
+    Q = Qf = np.eye(nx)
+    R = np.eye(nu)
+    
+    # temp = np.ones((nx, nx))
+    # A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    # B = np.vstack([np.eye(8),np.zeros((2,8))])
+    # B[8][0]=B[9][1]=1
+    # Q = Qf = np.eye(10) 
+    # R = np.eye(8)
+    # C = np.hstack([np.eye(6),np.zeros((6,4))])
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
@@ -126,10 +143,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if dist == "normal":
         theta_w_list = [2.0]
         theta_v_list = [5]
-        theta_x0 = 20 # radius of initial state ambiguity set
+        theta_x0 = 5 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
-        theta_v_list = [5.0]
+        theta_v_list = [1.0]
         theta_x0 = 1.0
     else:
         theta_w_list = [2.0]
@@ -160,7 +177,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         w_max = None
                         w_min = None
                         mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.5*np.eye(nx)
+                        Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -195,8 +212,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = 0.5*np.ones((ny, 1))
+                        M = 1.0*np.eye(ny) #observation noise covariance
+                        mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
                         v_max = 2.0*np.ones(ny)
@@ -249,8 +266,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         drcmmse = DRCMMSE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
 
-                    drcmmse.backward()
                     drce.backward()
+                    drcmmse.backward()
                     wdrc.backward()
                     lqg.backward()
                         
@@ -406,8 +423,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=4, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=4, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
