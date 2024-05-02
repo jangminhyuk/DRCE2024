@@ -238,7 +238,7 @@ def summarize(out_lq_list, out_wdrc_list, out_drce_list, out_drcmmse_list, dist,
 
         handles, labels = plt.gca().get_legend_handles_labels()
         
-        order = [0, 1, 2]
+        order = [0, 1, 2, 3]
         ax.legend([handles[idx] for idx in order], [labels[idx] for idx in order], fontsize=14)
 
         ax.grid()
