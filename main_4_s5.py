@@ -112,6 +112,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
+    output_J_MSE_LQG_mean, output_J_MSE_WDRC_mean, output_J_MSE_DRCE_mean, output_J_MSE_DRCMMSE_mean=[], [], [], []
+    output_J_MSE_LQG_std, output_J_MSE_WDRC_std, output_J_MSE_DRCE_std, output_J_MSE_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
     nx = 20 #state dimension
     nu = 10 #control input dimension
@@ -325,9 +327,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         J_MSE_DRCMMSE_list.append(out['mse'])
                         
                     J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
+                    J_MSE_LQG_std = np.std(J_MSE_LQG_list)
                     J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
+                    J_MSE_WDRC_std = np.std(J_MSE_WDRC_list)
                     J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
+                    J_MSE_DRCE_std = np.std(J_MSE_DRCE_list)
                     J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
+                    J_MSE_DRCMMSE_std = np.std(J_MSE_DRCMMSE_list)
+                    
                     print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
                     print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
                     print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
@@ -336,7 +343,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 
                     if obsv_plot:
                         J_LQG_list, J_WDRC_list, J_DRCE_list, J_DRCMMSE_list= [], [], [], []
-                        
+                        J_MSE_LQG_list, J_MSE_WDRC_list, J_MSE_DRCE_list, J_MSE_DRCMMSE_list= [], [], [], []
                         #lqg-----------------------
                         for out in output_lqg_list:
                             J_LQG_list.append(out['cost'])
@@ -345,6 +352,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         J_LQG_std = np.std(J_LQG_list, axis=0)
                         output_J_LQG_mean.append(J_LQG_mean[0])
                         output_J_LQG_std.append(J_LQG_std[0])
+                        
+                        output_J_MSE_LQG_mean.append(J_LQG_mean[0])
+                        output_J_MSE_LQG_std.append(J_LQG_std[0])
                         print(" Average cost (LQG) : ", J_LQG_mean[0])
                         print(" std (LQG) : ", J_LQG_std[0])
                         
@@ -356,6 +366,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         J_WDRC_std = np.std(J_WDRC_list, axis=0)
                         output_J_WDRC_mean.append(J_WDRC_mean[0])
                         output_J_WDRC_std.append(J_WDRC_std[0])
+                        
+                        output_J_MSE_WDRC_mean.append(J_WDRC_mean[0])
+                        output_J_MSE_WDRC_std.append(J_WDRC_std[0])
                         print(" Average cost (WDRC) : ", J_WDRC_mean[0])
                         print(" std (WDRC) : ", J_WDRC_std[0])
                         
@@ -367,6 +380,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         J_DRCE_std = np.std(J_DRCE_list, axis=0)
                         output_J_DRCE_mean.append(J_DRCE_mean[0])
                         output_J_DRCE_std.append(J_DRCE_std[0])
+                        
+                        output_J_MSE_DRCE_mean.append(J_DRCE_mean[0])
+                        output_J_MSE_DRCE_std.append(J_DRCE_std[0])
                         print(" Average cost (DRCE) : ", J_DRCE_mean[0])
                         print(" std (DRCE) : ", J_DRCE_std[0])
                         
@@ -378,6 +394,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         J_DRCMMSE_std = np.std(J_DRCMMSE_list, axis=0)
                         output_J_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
                         output_J_DRCMMSE_std.append(J_DRCMMSE_std[0])
+                        
+                        output_J_MSE_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
+                        output_J_MSE_DRCMMSE_std.append(J_DRCMMSE_std[0])
                         print(" Average cost (DRCMMSE) : ", J_DRCMMSE_mean[0])
                         print(" std (DRCMMSE) : ", J_DRCMMSE_std[0])
                         
@@ -413,7 +432,16 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     save_data(path + 'lqg_mean.pkl', output_J_LQG_mean)
                     save_data(path + 'lqg_std.pkl', output_J_LQG_std) 
                     save_data(path + 'wdrc_mean.pkl', output_J_WDRC_mean)
-                    save_data(path + 'wdrc_std.pkl', output_J_WDRC_std) 
+                    save_data(path + 'wdrc_std.pkl', output_J_WDRC_std)
+                    
+                    save_data(path + 'mse_drcmmse_mean.pkl', output_J_MSE_DRCMMSE_mean)
+                    save_data(path + 'mse_drcmmse_std.pkl', output_J_MSE_DRCMMSE_std)  
+                    save_data(path + 'mse_drce_mean.pkl', output_J_MSE_DRCE_mean)
+                    save_data(path + 'mse_drce_std.pkl', output_J_MSE_DRCE_std)  
+                    save_data(path + 'mse_lqg_mean.pkl', output_J_MSE_LQG_mean)
+                    save_data(path + 'mse_lqg_std.pkl', output_J_MSE_LQG_std) 
+                    save_data(path + 'mse_wdrc_mean.pkl', output_J_MSE_WDRC_mean)
+                    save_data(path + 'mse_wdrc_std.pkl', output_J_MSE_WDRC_std) 
                     
                     #Summarize and plot the results
                     print('\n-------Summary-------')
@@ -422,6 +450,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     # reset
                     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
                     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
+                    
+                    output_J_MSE_LQG_mean, output_J_MSE_WDRC_mean, output_J_MSE_DRCE_mean, output_J_MSE_DRCMMSE_mean=[], [], [], []
+                    output_J_MSE_LQG_std, output_J_MSE_WDRC_std, output_J_MSE_DRCE_std, output_J_MSE_DRCMMSE_std=[], [], [], []
                     
     print("Data generation Completed!!")
     
