@@ -93,7 +93,7 @@ def create_matrices(nx, ny, nu):
     A = np.load("./inputs/A.npy") # (n x n) matrix
     B = np.load("./inputs/B.npy")
     C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-    
+
     return A, B, C
 
 def save_data(path, data):
@@ -115,7 +115,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #-------Initialization-------
     nx = 20 #state dimension
     nu = 10 #control input dimension
-    ny = 12#output dimension
+    ny = 16#output dimension
     A, B, C = create_matrices(nx, ny, nu) #system matrices generation
     #cost weights
     Q = np.load("./inputs/Q.npy")

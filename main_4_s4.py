@@ -13,6 +13,7 @@ from controllers.inf_DRCE import inf_DRCE
 
 import os
 import pickle
+import control
 
 def uniform(a, b, N=1):
     n = a.shape[0]
@@ -99,77 +100,30 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #noise_plot_results = True
     seed = 2024 # Random seed !  any value
     if noise_plot_results:
-        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
+        num_noise_list = [25, 30, 35, 40, 45]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 10 # num x0 samples 
+    num_x0_samples = 25 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 21
-    nu = 11
-    ny = 10
-    A = np.array([[-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,  0,	0,	0],
-                    [0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	-1,	0,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1]
-                    ])
-    B = np.array([[1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	1,	0,  0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1]])
-    # C = np.zeros((11,21))
-    # C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17]=C[9][19]= 1
-    # C = np.zeros((9,21))
-    # C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17] = 1
+    nx = 20 #state dimension
+    nu = 20 #control input dimension
+    ny = 12#output dimension
+    temp = np.ones((nx, nx))
+    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    B = np.eye(nu)
+    Q =  Qf = np.eye(nx)
+    R = np.eye(nu)
     C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-    print(A.shape)
-    print(B.shape)
-    print(C.shape)
-    Q=Qf=np.eye(21)
-    R = np.eye(11)
-    
+    print("Rank : ", np.linalg.matrix_rank(control.obsv(A,C)))
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
     use_lambda = True
-    lambda_ = 50 # will not be used if the parameter "use_lambda = False"
+    lambda_ = 100 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
@@ -220,7 +174,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
+                        w_max = 1.5*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
@@ -247,10 +201,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         v_max = None
                         v_min = None
                         M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = 0.5*np.ones((ny, 1))
+                        mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -0.5*np.ones(ny)
-                        v_max = 1.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -299,9 +253,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         drcmmse = DRCMMSE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
-
-                    drce.backward()
+                    
                     drcmmse.backward()
+                    drce.backward()
                     wdrc.backward()
                     lqg.backward()
                         
@@ -476,8 +430,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=25, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=25, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
