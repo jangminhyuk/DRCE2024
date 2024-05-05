@@ -103,12 +103,12 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     # Set labels
     ax.set_xlabel(r'$\lambda$', fontsize=16)
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
-    ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
+    ax.set_zlabel(r'Average MSE', fontsize=16, rotation=90, labelpad=3)
     
     ax.view_init(elev=20, azim=-65)
     
     plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
+    fig.savefig(path + 'params_mse_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
     
 def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, drcmmse_theta_w_values, drcmmse_theta_v_values, drcmmse_cost_values, dist, noise_dist, infinite, use_lambda, path):
@@ -204,12 +204,12 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     # Set labels
     ax.set_xlabel(r'$\theta_w$', fontsize=16)
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
-    ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
+    ax.set_zlabel(r'MSE', fontsize=16, rotation=90, labelpad=3)
     
     ax.view_init(elev=20, azim=-65)
     
     plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
+    fig.savefig(path + 'params_mse_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
 
 if __name__ == "__main__":
@@ -236,21 +236,25 @@ if __name__ == "__main__":
     drcmmse_lambda_values = []
     drcmmse_theta_v_values = []
     drcmmse_cost_values = []
+    drcmmse_mse_values = []
     
     drce_theta_w_values =[]
     drce_lambda_values = []
     drce_theta_v_values = []
     drce_cost_values = []
+    drce_mse_values = []
     
     wdrc_theta_w_values = []
     wdrc_lambda_values = []
     wdrc_theta_v_values = []
     wdrc_cost_values = []
+    wdrc_mse_values = []
     
     lqg_theta_w_values =[]
     lqg_lambda_values = []
     lqg_theta_v_values = []
     lqg_cost_values = []
+    lqg_mse_values = []
     # theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
     # lambda_list = [ 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
@@ -258,8 +262,6 @@ if __name__ == "__main__":
     # theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
     # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] # radius of noise ambiguity set
-    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
     theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
     #theta_v_list = [1.0, 2.0, 4.0, 6.0, 10.0]
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
@@ -268,16 +270,17 @@ if __name__ == "__main__":
 
     # Regular expression pattern to extract numbers from file names
     
-    
+    #---------
+    # MSE
     if args.use_lambda:
-        pattern_drce = r"drce_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
-        pattern_drcmmse = r"drcmmse_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
-        pattern_wdrc = r"wdrc_(\d+)"
+        pattern_drce = r"drce_mse_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
+        pattern_drcmmse = r"drcmmse_mse_(\d+)and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
+        pattern_wdrc = r"wdrc_mse_(\d+)"
     else:
-        pattern_drcmmse = r"drcmmse_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
-        pattern_drce = r"drce_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
-        pattern_wdrc = r"wdrc_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
-    pattern_lqg = r"lqg.pkl"
+        pattern_drcmmse = r"drcmmse_mse_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
+        pattern_drce = r"drce_mse_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?and_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
+        pattern_wdrc = r"wdrc_mse_(\d+(?:\.\d+)?)_?(\d+(?:_\d+)?)?"
+    pattern_lqg = r"lqg_mse"
     # Iterate over each file in the directory
     for filename in os.listdir(path):
         match = re.search(pattern_drce, filename)
@@ -304,9 +307,9 @@ if __name__ == "__main__":
                 drce_theta_v_values.append(theta_v_value)
             
             drce_file = open(path + filename, 'rb')
-            drce_cost = pickle.load(drce_file)
+            drce_mse = pickle.load(drce_file)
             drce_file.close()
-            drce_cost_values.append(drce_cost[0])  # Store cost value
+            drce_mse_values.append(drce_mse)  # Store cost value
         else:
             match_drcmmse = re.search(pattern_drcmmse, filename)
             if match_drcmmse:
@@ -332,9 +335,9 @@ if __name__ == "__main__":
                     drcmmse_theta_v_values.append(theta_v_value)
                 
                 drcmmse_file = open(path + filename, 'rb')
-                drcmmse_cost = pickle.load(drcmmse_file)
+                drcmmse_mse = pickle.load(drcmmse_file)
                 drcmmse_file.close()
-                drcmmse_cost_values.append(drcmmse_cost[0])  # Store cost value
+                drcmmse_mse_values.append(drcmmse_mse)  # Store cost value
             else:
                 match_wdrc = re.search(pattern_wdrc, filename)
                 if match_wdrc: # wdrc
@@ -346,7 +349,7 @@ if __name__ == "__main__":
                         theta_w_value += float(theta_w_str)/10
                     #print('theta w : ', theta_w_value)
                     wdrc_file = open(path + filename, 'rb')
-                    wdrc_cost = pickle.load(wdrc_file)
+                    wdrc_mse = pickle.load(wdrc_file)
                     wdrc_file.close()
                     #print(wdrc_cost[0])
                     for aux_theta_v in theta_v_list:
@@ -356,29 +359,28 @@ if __name__ == "__main__":
                             wdrc_theta_w_values.append(theta_w_value)
                         #print(wdrc_cost[0])
                         wdrc_theta_v_values.append(aux_theta_v) # since wdrc not affected by theta v, just add auxilary theta for plot
-                        wdrc_cost_values.append(wdrc_cost[0])
+                        wdrc_mse_values.append(wdrc_mse)
                         #print(wdrc_cost[0])
                 else:
                     match_lqg = re.search(pattern_lqg, filename)
                     if match_lqg:
                         lqg_file = open(path + filename, 'rb')
-                        lqg_cost = pickle.load(lqg_file)
+                        lqg_mse = pickle.load(lqg_file)
                         lqg_file.close()
                         if args.use_lambda:
                             for aux_lambda in lambda_list:
                                 for aux_theta_v in theta_v_list:
                                     lqg_lambda_values.append(aux_lambda)
                                     lqg_theta_v_values.append(aux_theta_v)
-                                    lqg_cost_values.append(lqg_cost[0])
+                                    lqg_mse_values.append(lqg_mse)
                                     #print(lqg_cost[0])
                         else:
                             for aux_theta_w in theta_w_list:
                                 for aux_theta_v in theta_v_list:
                                     lqg_theta_w_values.append(aux_theta_w)
                                     lqg_theta_v_values.append(aux_theta_v)
-                                    lqg_cost_values.append(lqg_cost[0])
-                                    #print(lqg_cost[0])
-                
+                                    lqg_mse_values.append(lqg_mse)    
+
                     
 
     # Convert lists to numpy arrays
@@ -394,19 +396,19 @@ if __name__ == "__main__":
         lqg_theta_w_values = np.array(lqg_theta_w_values)
     
     drcmmse_theta_v_values = np.array(drcmmse_theta_v_values)
-    drcmmse_cost_values = np.array(drcmmse_cost_values)
+    drcmmse_mse_values = np.array(drcmmse_mse_values)
     
     drce_theta_v_values = np.array(drce_theta_v_values)
-    drce_cost_values = np.array(drce_cost_values)
+    drce_mse_values = np.array(drce_mse_values)
 
     wdrc_theta_v_values = np.array(wdrc_theta_v_values)
-    wdrc_cost_values = np.array(wdrc_cost_values)
+    wdrc_mse_values = np.array(wdrc_mse_values)
     
     lqg_theta_v_values = np.array(lqg_theta_v_values)
-    lqg_cost_values = np.array(lqg_cost_values)
+    lqg_mse_values = np.array(lqg_mse_values)
     
     if args.use_lambda:
-        summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdrc_lambda_values, wdrc_theta_v_values, wdrc_cost_values , drce_lambda_values, drce_theta_v_values, drce_cost_values, drcmmse_lambda_values, drcmmse_theta_v_values, drcmmse_cost_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
+        summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_mse_values ,wdrc_lambda_values, wdrc_theta_v_values, wdrc_mse_values , drce_lambda_values, drce_theta_v_values, drce_mse_values, drcmmse_lambda_values, drcmmse_theta_v_values, drcmmse_mse_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
     else:
-        summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, drcmmse_theta_w_values, drcmmse_theta_v_values, drcmmse_cost_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
+        summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_mse_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_mse_values , drce_theta_w_values, drce_theta_v_values, drce_mse_values, drcmmse_theta_w_values, drcmmse_theta_v_values, drcmmse_mse_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
 

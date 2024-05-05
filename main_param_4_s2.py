@@ -167,23 +167,23 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     if not os.path.exists(path):
                         os.makedirs(path)
                 
-                    #-------Disturbance distribution-------
+                     #-------Disturbance Distribution-------
                     if dist == "normal":
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
                         mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.1*np.eye(nx)
+                        Sigma_w= 0.5*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.1*np.ones((nx,1))
+                        x0_mean = 0.5*np.ones((nx,1))
                         x0_mean[-1]=-1
-                        x0_cov = 0.5*np.eye(nx)
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
                         w_max = 1.5*np.ones(nx)
-                        w_min = -2.0*np.ones(nx)
+                        w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
@@ -208,7 +208,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
+                        M = 1.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)

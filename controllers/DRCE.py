@@ -258,9 +258,8 @@ class DRCE:
         
         
         prob.solve(solver=cp.MOSEK)
-        
         if prob.status in ["infeasible", "unbounded"]:
-            print(prob.status, 'False in DRKF combined!!!!!!!!!!!!!')
+            print(prob.status, 'False in DR SDP !!!!!!!!')
         
         sol = prob.variables()
         #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z']
@@ -278,10 +277,12 @@ class DRCE:
         # if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
         #     print("Next X_post is larger !")
         # print("M_opt norm : ", np.linalg.norm(sol[4].value))
-        # print("X_post norm : " , np.linalg.norm(sol[0].value))
+        #print("X_post norm : " , np.linalg.norm(sol[0].value))
         # self.previousX = sol[0].value
         # self.previousM = sol[4].value
         #S_opt = S.value
+        print("X_post norm : " , np.linalg.norm(sol[0].value))
+        #print("Kalman gain norm : ", np.linalg.norm(S_xy_opt @ np.linalg.inv(S_yy_opt)))
         Sigma_wc_opt = sol[1].value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, Sigma_wc_opt, cost
@@ -364,6 +365,7 @@ class DRCE:
             y_ = self.C @ (self.A @ x + self.B @ u + mu_w) + v_mean_hat
         
         x_new = S_xy @ np.linalg.inv(S_yy) @ (y - y_) + x_
+        
         return x_new
     
     def DR_kalman_filter_cov(self, P, S, M_hat, X_cov, Sigma_hat, Lambda):
@@ -491,6 +493,11 @@ class DRCE:
             #Update the state estimation (using the worst-case mean and covariance)
             x_mean[t+1] = self.DR_kalman_filter(self.v_mean_hat[t+1], self.M_hat[t+1], x_mean[t], y[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], mu_wc[t], u=u[t])
 
+        self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
+        #Collect Estimation MSE 
+        for t in range(self.T):
+            self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
+
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
         for t in range(self.T-1, -1, -1):
@@ -502,6 +509,7 @@ class DRCE:
                 'state_traj': x,
                 'output_traj': y,
                 'control_traj': u,
-                'cost': J}
+                'cost': J,
+                'mse':self.J_mse}
 
 

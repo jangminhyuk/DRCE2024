@@ -107,23 +107,67 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 8 #state dimension
-    nu = 1 #control input dimension
-    ny = 1#output dimension
-    A=np.array([[0.5623 ,-0.01642, 0.01287,-0.0161 , 0.02094,-0.02988, 0.0183 , 0.008743],
-    [0.102  , 0.6114 ,-0.02468, 0.02468,-0.03005, 0.04195,-0.02559, 0.03889 ],
-    [0.1361 , 0.2523 , 0.641  ,-0.03404, 0.03292,-0.04296, 0.02588, 0.08467 ],
-    [0.09951, 0.2859 , 0.3476 , 0.6457 ,-0.03249, 0.03316,-0.01913, 0.1103  ],
-    [-0.04794, 0.08708, 0.3297 , 0.3102 , 0.6201 ,-0.03015, 0.01547, 0.08457 ],
-    [-0.1373 ,-0.1224 , 0.1705 , 0.3106 , 0.191  , 0.5815 ,-0.01274, 0.05394 ],
-    [-0.1497 ,-0.1692 , 0.1165 , 0.2962 , 0.1979 , 0.07631, 0.5242 , 0.04702 ],
-    [0      , 0      , 0      , 0      , 0      , 0      , 0      , 0.6065  ]])
+    # nx = 10 #state dimension
+    # nu = 10 #control input dimension
+    # ny = 9#output dimension
+    # temp = np.ones((nx, nx))
+    # A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    # B = Q = R = Qf = np.eye(10)
+    # #C = np.eye(10)
+    # C = np.hstack([np.eye(9), np.zeros((9,1))])
     
-    B=np.array([[-0.1774],[-0.2156],[-0.2194],[-0.09543], [0.0579], [0.09303], [0.08962],[0]])
-    C=np.array([[-0.0049 , 0.0049 ,-0.006 , 0.01 , 0.0263 , 0.3416 , 0.6759 , 0]])
+    
+    # nx = 8 #state dimension
+    # nu = 4 #control input dimension
+    # ny = 4#output dimension
+    # A = np.array([[0.144,	-0.058,	0.056,	0.042,	0.12,	2.1454,	0,	0.08],
+    #             [-0.506,	-0.236,	-0.02,	-0.012,	-0.06,	-0.909,	1.093,	-0.04],
+    #             [0,	0,	-0.278,	0.291,	0,	0,	0,	0.58],
+    #             [0,	0,	0,	-0.33,	0,	0,	0,	0],
+    #             [0,	0,	0.303,	0.029,	-1.67,	0,	0,	0.092],
+    #             [-0.154,	0.133,	-0.006,	-0.004,	-0.014,	-1.688,	0.236,	0.013],
+    #             [-0.345,	0.304,	-0.018,	-0.014,	-0.032,	-0.611,	-1.824,	-0.024],
+    #             [0,	0,	0,	0.247,	0,	0,	0,	-1.978]
+    #             ])
+    
+    
+    # B=np.array([[-0.076,	0.02,	0,	0],
+    #             [0.588,	-0.006,	0,	0],
+    #             [0,	0.152,	0,	0],
+    #             [0,	1.45,	0,	0],
+    #             [0,	0,	0,	0.012],
+    #             [0,	0,	0.162,	-0.002],
+    #             [0,	0,	0.414,	-0.008],
+    #             [0,	0,	0,	0.248]
+    #             ])
+    # C = np.array([[1,0,	0,	0,	0,	0,	0,	0],
+    #             [0,	1,	0,	0,	0,	0,	0,	0],
+    #             [0,	0,	1,	0,	0,	0,	0,	0],
+    #             [0,	0,	0,	1,	0,	0,	0,	0]
+    #             ])
 
-    Q = Qf = np.eye(8)
-    R  = np.eye(1) 
+    # Q = Qf = 0.1*np.eye(8)
+    # R  = np.eye(4)
+    # print(A.shape)
+    # print(B.shape)
+    # print(C.shape)
+    # nx = 8 #state dimension
+    # nu = 1 #control input dimension
+    # ny = 1#output dimension
+    # A=np.array([[0.5623 ,-0.01642, 0.01287,-0.0161 , 0.02094,-0.02988, 0.0183 , 0.008743],
+    # [0.102  , 0.6114 ,-0.02468, 0.02468,-0.03005, 0.04195,-0.02559, 0.03889 ],
+    # [0.1361 , 0.2523 , 0.641  ,-0.03404, 0.03292,-0.04296, 0.02588, 0.08467 ],
+    # [0.09951, 0.2859 , 0.3476 , 0.6457 ,-0.03249, 0.03316,-0.01913, 0.1103  ],
+    # [-0.04794, 0.08708, 0.3297 , 0.3102 , 0.6201 ,-0.03015, 0.01547, 0.08457 ],
+    # [-0.1373 ,-0.1224 , 0.1705 , 0.3106 , 0.191  , 0.5815 ,-0.01274, 0.05394 ],
+    # [-0.1497 ,-0.1692 , 0.1165 , 0.2962 , 0.1979 , 0.07631, 0.5242 , 0.04702 ],
+    # [0      , 0      , 0      , 0      , 0      , 0      , 0      , 0.6065  ]])
+    
+    # B=np.array([[-0.1774],[-0.2156],[-0.2194],[-0.09543], [0.0579], [0.09303], [0.08962],[0]])
+    # C=np.array([[-0.0049 , 0.0049 ,-0.006 , 0.01 , 0.0263 , 0.3416 , 0.6759 , 0]])
+
+    # Q = Qf = np.eye(8)
+    # R  = np.eye(1) 
     
     
     # nx = 7 #state dimension
@@ -147,26 +191,83 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #               [0, 0, 1, 0, 0, 0, 0],
     #               [1, 0, 0, 0, 0, 0, 0],
     #               [0, 1, 0, 0, 0, 0, 0]])
-    # Q = Qf = 1*np.eye(7)
+    
+    # Q = Qf = 0.1*np.eye(7)
     # R  = np.eye(2) 
+    nx = 21
+    nu = 11
+    ny = 9
+    A = np.array([[-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,  0,	0,	0],
+                    [0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	-1,	0,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1]
+                    ])
+    B = np.array([[1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	1,	0,  0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1]])
+    # C = np.zeros((11,21))
+    # C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17]=C[9][19]= 1
+    C = np.zeros((9,21))
+    C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17] = 1
+    print(A.shape)
+    print(B.shape)
+    print(C.shape)
+    Q=Qf=2*np.eye(21)
+    R = np.eye(11)
+    
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
-    lambda_ = 200 # will not be used if the parameter "use_lambda = False"
+    use_lambda = True
+    lambda_ = 50 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
         theta_w_list = [1.0]
-        theta_v_list = [1.0]
-        theta_x0 = 1.0 # radius of initial state ambiguity set
+        theta_v_list = [5.0]
+        theta_x0 = 5.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
-        theta_v_list = [1.0]
-        theta_x0 = 1.0
+        theta_v_list = [2.0]
+        theta_x0 = 2.0
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
@@ -195,8 +296,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.0*np.ones((nx, 1))
-                        Sigma_w= 0.2*np.eye(nx)
+                        mu_w = 0.1*np.ones((nx, 1))
+                        Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -231,8 +332,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.2*np.eye(ny) #observation noise covariance
-                        mu_v = 0*np.ones((ny, 1))
+                        M = 2.0*np.eye(ny) #observation noise covariance
+                        mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -0.5*np.ones(ny)
                         v_max = 1.0*np.ones(ny)
@@ -280,8 +381,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
                         
                     else:
-                        wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         drcmmse = DRCMMSE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
 
@@ -331,7 +432,26 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_lqg_list.append(output_lqg)
                         print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
-                    
+                    # -------------------------
+                    # Collect State Estimation errors
+                    J_MSE_LQG_list,J_MSE_WDRC_list,J_MSE_DRCE_list,J_MSE_DRCMMSE_list = [],[],[],[]
+                    for out in output_lqg_list:
+                        J_MSE_LQG_list.append(out['mse'])
+                    for out in output_wdrc_list:
+                        J_MSE_WDRC_list.append(out['mse'])
+                    for out in output_drce_list:
+                        J_MSE_DRCE_list.append(out['mse'])
+                    for out in output_drcmmse_list:
+                        J_MSE_DRCMMSE_list.append(out['mse'])
+                        
+                    J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
+                    J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
+                    J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
+                    J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
+                    print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
+                    print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
+                    print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
+                    print("J_MSE_DRCMMSE_mean : ", J_MSE_DRCMMSE_mean)
                 
                     if noise_plot_results:
                         J_LQG_list, J_WDRC_list, J_DRCE_list, J_DRCMMSE_list= [], [], [], []

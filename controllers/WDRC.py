@@ -374,19 +374,24 @@ class WDRC:
 
             #Update the state estimation (using the worst-case mean and covariance)
             x_mean[t+1] = self.kalman_filter(self.v_mean_hat[t+1], self.M_hat[t+1], x_mean[t], self.x_cov[t+1], y[t+1], mu_wc[t], u=u[t])
+        
+        self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
+        #Collect Estimation MSE 
+        for t in range(self.T):
+            self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
 
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
         for t in range(self.T-1, -1, -1):
             J[t] = J[t+1] + x[t].T @ self.Q @ x[t] + u[t].T @ self.R @ u[t]
 
-        
         end = time.time()
         time_ = end-start
         return {'comp_time': time_,
                 'state_traj': x,
                 'output_traj': y,
                 'control_traj': u,
-                'cost': J}
+                'cost': J,
+                'mse':self.J_mse}
 
 

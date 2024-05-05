@@ -24,6 +24,9 @@ class LQG:
         self.mu_w = mu_w
         self.mu_v = mu_v # true
         self.Sigma_w = Sigma_w
+        
+        
+        
         if self.dist=="uniform" or self.dist=="quadratic":
             self.x0_max = x0_max
             self.x0_min = x0_min
@@ -192,6 +195,12 @@ class LQG:
 
             #Update the state estimation (using the nominal mean and covariance)
             x_mean[t+1] = self.kalman_filter(self.v_mean_hat[t+1], self.M_hat[t+1], x_mean[t], self.x_cov[t+1], y[t+1], self.mu_hat[t], u=u[t])
+       
+       
+        self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
+        #Collect Estimation MSE 
+        for t in range(self.T):
+            self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
 
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
@@ -204,4 +213,5 @@ class LQG:
                 'state_traj': x,
                 'output_traj': y,
                 'control_traj': u,
-                'cost': J}
+                'cost': J,
+                'mse':self.J_mse}

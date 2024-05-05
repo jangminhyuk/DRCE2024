@@ -166,17 +166,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.5*np.eye(nx)
+                        mu_w = 2.0*np.ones((nx, 1))
+                        Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.1*np.ones((nx,1))
+                        x0_mean = 0.5*np.ones((nx,1))
                         x0_mean[-1]=-1
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 1.5*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
@@ -202,11 +202,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 1.0*np.eye(ny) #observation noise covariance
+                        M = 2.5*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
-                        v_max = 2.0*np.ones(ny)
+                        v_max = 3.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -302,7 +302,27 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_lqg_list.append(output_lqg)
                         print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
-                    
+                    #-----------------
+                    # Collect State Estimation errors
+                    J_MSE_LQG_list,J_MSE_WDRC_list,J_MSE_DRCE_list,J_MSE_DRCMMSE_list = [],[],[],[]
+                    for out in output_lqg_list:
+                        J_MSE_LQG_list.append(out['mse'])
+                    for out in output_wdrc_list:
+                        J_MSE_WDRC_list.append(out['mse'])
+                    for out in output_drce_list:
+                        J_MSE_DRCE_list.append(out['mse'])
+                    for out in output_drcmmse_list:
+                        J_MSE_DRCMMSE_list.append(out['mse'])
+                        
+                    J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
+                    J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
+                    J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
+                    J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
+                    print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
+                    print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
+                    print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
+                    print("J_MSE_DRCMMSE_mean : ", J_MSE_DRCMMSE_mean)
+                    #-----------------
                 
                     if noise_plot_results:
                         J_LQG_list, J_WDRC_list, J_DRCE_list, J_DRCMMSE_list= [], [], [], []
@@ -413,8 +433,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
