@@ -13,6 +13,7 @@ from controllers.inf_DRCE import inf_DRCE
 
 import os
 import pickle
+import control
 
 def uniform(a, b, N=1):
     n = a.shape[0]
@@ -92,7 +93,7 @@ def create_matrices(nx, ny, nu):
     A = np.load("./inputs/A.npy") # (n x n) matrix
     B = np.load("./inputs/B.npy")
     C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-
+    
     return A, B, C
 
 def save_data(path, data):
@@ -141,7 +142,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     else:
         theta_w_list = [2.0]
         theta_v_list = [2.5]
-        theta_x0 = 0.5
+        theta_x0 = 2.0
         
     #theta_x0 = 1.0 # radius of initial state ambiguity set
     

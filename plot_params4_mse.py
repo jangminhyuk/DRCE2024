@@ -159,7 +159,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc,  color='blue', label='WDRC')
     surfaces.append(surface_wdrc)
     labels.append('WDRC')
     #--------------
@@ -177,7 +177,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     # Plot smooth surface - DCE
     surface_drcmmse = ax.plot_surface(theta_w_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.9, color='purple', label='WDRC-MMSE')
     surfaces.append(surface_drcmmse)
-    labels.append('WDRC-MMSE')
+    labels.append('WDRC+DRMMSE')
     
     #--------------
     # Plot DRKF data points
@@ -262,11 +262,11 @@ if __name__ == "__main__":
     # theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
     # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
-    theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
+    theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0]
     #theta_v_list = [1.0, 2.0, 4.0, 6.0, 10.0]
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-    lambda_list = [15, 20, 30, 35, 40, 50, 60]
+    lambda_list = [15, 20, 30, 35, 40, 50]
 
     # Regular expression pattern to extract numbers from file names
     
