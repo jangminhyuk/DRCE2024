@@ -179,7 +179,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     num_x0_samples = 20 #  x0 samples 
     if dist=='normal':
         num_samples=num_noise_samples=15
-        num_x0_samples=15
+        num_x0_samples=10
     else:
         num_samples=num_noise_samples=num_x0_samples=20
     num_noise_list = [num_noise_samples]
@@ -237,24 +237,24 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         w_max = None
                         w_min = None
                         mu_w = 0.2*np.ones((nx, 1))
-                        Sigma_w= 0.2*np.eye(nx)
+                        Sigma_w= 0.1*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.2*np.ones((nx,1))
-                        x0_mean[-1]=-1
-                        x0_cov = 2.0*np.eye(nx)
+                        x0_mean = 1*np.ones((nx,1))
+                        #x0_mean[-1]=-1
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 2.0*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
                         x0_max = 0.5*np.ones(nx)
                         x0_min = 0.0*np.ones(nx)
-                        x0_max[-1] = 0.0
-                        x0_min[-1] = -2.0
+                        #x0_max[-1] = 0.0
+                        #x0_min[-1] = -2.0
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
                     elif dist =="uniform":
