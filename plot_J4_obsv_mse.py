@@ -38,13 +38,13 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     
     
     plt.xlabel(r'ny', fontsize=16)
-    plt.ylabel(r'Total Cost', fontsize=16)
+    plt.ylabel(r'Average MSE', fontsize=16)
     plt.legend(fontsize=16)
     plt.grid()
     plt.xlim([t[0], t[-1]])
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
-    plt.savefig(path +'/J_obsv_comp_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight")
+    plt.savefig(path +'/J_mse_obsv_comp_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight")
     plt.clf()
     print("Observation plot generated!!")
 
@@ -65,36 +65,36 @@ if __name__ == "__main__":
     else:
         path = "./results/{}_{}/finite/multiple/obsv_plot".format(args.dist, args.noise_dist)
     num_noise_list = [12,14,16,18,20]
-    avg_cost_lqg_file = open(path + '/lqg_mean.pkl', 'rb' )
+    avg_cost_lqg_file = open(path + '/mse_lqg_mean.pkl', 'rb' )
     avg_cost_lqg = pickle.load(avg_cost_lqg_file)
     
     avg_cost_lqg_file.close()
-    std_cost_lqg_file = open(path + '/lqg_std.pkl', 'rb' )
+    std_cost_lqg_file = open(path + '/mse_lqg_std.pkl', 'rb' )
     print("avg_cost_lqg : ",avg_cost_lqg)
     std_cost_lqg = pickle.load(std_cost_lqg_file)
     std_cost_lqg_file.close()
     
-    avg_cost_wdrc_file = open(path + '/wdrc_mean.pkl', 'rb' )
+    avg_cost_wdrc_file = open(path + '/mse_wdrc_mean.pkl', 'rb' )
     avg_cost_wdrc = pickle.load(avg_cost_wdrc_file)
     print("avg_cost_wdrc : ",avg_cost_wdrc)
     avg_cost_wdrc_file.close()
-    std_cost_wdrc_file = open(path + '/wdrc_std.pkl', 'rb' )
+    std_cost_wdrc_file = open(path + '/mse_wdrc_std.pkl', 'rb' )
     std_cost_wdrc = pickle.load(std_cost_wdrc_file)
     std_cost_wdrc_file.close()
     
-    avg_cost_drce_file = open(path + '/drce_mean.pkl', 'rb' )
+    avg_cost_drce_file = open(path + '/mse_drce_mean.pkl', 'rb' )
     avg_cost_drce = pickle.load(avg_cost_drce_file)
     print("avg_cost_drce : ",avg_cost_drce)
     avg_cost_drce_file.close()
-    std_cost_drce_file = open(path + '/drce_std.pkl', 'rb' )
+    std_cost_drce_file = open(path + '/mse_drce_std.pkl', 'rb' )
     std_cost_drce = pickle.load(std_cost_drce_file)
     std_cost_drce_file.close()
     
-    avg_cost_drcmmse_file = open(path + '/drcmmse_mean.pkl', 'rb' )
+    avg_cost_drcmmse_file = open(path + '/mse_drcmmse_mean.pkl', 'rb' )
     avg_cost_drcmmse = pickle.load(avg_cost_drcmmse_file)
     print("avg_cost_drcmmse : ",avg_cost_drcmmse)
     avg_cost_drcmmse_file.close()
-    std_cost_drcmmse_file = open(path + '/drcmmse_std.pkl', 'rb' )
+    std_cost_drcmmse_file = open(path + '/mse_drcmmse_std.pkl', 'rb' )
     std_cost_drcmmse = pickle.load(std_cost_drcmmse_file)
     std_cost_drcmmse_file.close()
     

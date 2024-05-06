@@ -128,7 +128,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
+    use_lambda = True
     lambda_ = 1000 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
@@ -188,7 +188,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 1.0*np.ones(nx)
+                        w_max = 2.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
@@ -353,8 +353,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_LQG_mean.append(J_LQG_mean[0])
                         output_J_LQG_std.append(J_LQG_std[0])
                         
-                        output_J_MSE_LQG_mean.append(J_LQG_mean[0])
-                        output_J_MSE_LQG_std.append(J_LQG_std[0])
+                        output_J_MSE_LQG_mean.append(J_MSE_LQG_mean)
+                        output_J_MSE_LQG_std.append(J_MSE_LQG_std)
                         print(" Average cost (LQG) : ", J_LQG_mean[0])
                         print(" std (LQG) : ", J_LQG_std[0])
                         
@@ -367,8 +367,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_WDRC_mean.append(J_WDRC_mean[0])
                         output_J_WDRC_std.append(J_WDRC_std[0])
                         
-                        output_J_MSE_WDRC_mean.append(J_WDRC_mean[0])
-                        output_J_MSE_WDRC_std.append(J_WDRC_std[0])
+                        output_J_MSE_WDRC_mean.append(J_MSE_WDRC_mean)
+                        output_J_MSE_WDRC_std.append(J_MSE_WDRC_std)
                         print(" Average cost (WDRC) : ", J_WDRC_mean[0])
                         print(" std (WDRC) : ", J_WDRC_std[0])
                         
@@ -381,8 +381,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_DRCE_mean.append(J_DRCE_mean[0])
                         output_J_DRCE_std.append(J_DRCE_std[0])
                         
-                        output_J_MSE_DRCE_mean.append(J_DRCE_mean[0])
-                        output_J_MSE_DRCE_std.append(J_DRCE_std[0])
+                        output_J_MSE_DRCE_mean.append(J_MSE_DRCE_mean)
+                        output_J_MSE_DRCE_std.append(J_MSE_DRCE_std)
                         print(" Average cost (DRCE) : ", J_DRCE_mean[0])
                         print(" std (DRCE) : ", J_DRCE_std[0])
                         
@@ -395,8 +395,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
                         output_J_DRCMMSE_std.append(J_DRCMMSE_std[0])
                         
-                        output_J_MSE_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
-                        output_J_MSE_DRCMMSE_std.append(J_DRCMMSE_std[0])
+                        output_J_MSE_DRCMMSE_mean.append(J_MSE_DRCMMSE_mean)
+                        output_J_MSE_DRCMMSE_std.append(J_MSE_DRCMMSE_std)
                         print(" Average cost (DRCMMSE) : ", J_DRCMMSE_mean[0])
                         print(" std (DRCMMSE) : ", J_DRCMMSE_std[0])
                         
@@ -474,8 +474,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=20, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=20, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
