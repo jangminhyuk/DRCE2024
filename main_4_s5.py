@@ -128,7 +128,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
+    use_lambda = True
     lambda_ = 1000 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
@@ -353,8 +353,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_LQG_mean.append(J_LQG_mean[0])
                         output_J_LQG_std.append(J_LQG_std[0])
                         
-                        output_J_MSE_LQG_mean.append(J_LQG_mean[0])
-                        output_J_MSE_LQG_std.append(J_LQG_std[0])
+                        output_J_MSE_LQG_mean.append(J_MSE_LQG_mean)
+                        output_J_MSE_LQG_std.append(J_MSE_LQG_std)
                         print(" Average cost (LQG) : ", J_LQG_mean[0])
                         print(" std (LQG) : ", J_LQG_std[0])
                         
@@ -367,8 +367,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_WDRC_mean.append(J_WDRC_mean[0])
                         output_J_WDRC_std.append(J_WDRC_std[0])
                         
-                        output_J_MSE_WDRC_mean.append(J_WDRC_mean[0])
-                        output_J_MSE_WDRC_std.append(J_WDRC_std[0])
+                        output_J_MSE_WDRC_mean.append(J_MSE_WDRC_mean)
+                        output_J_MSE_WDRC_std.append(J_MSE_WDRC_std)
                         print(" Average cost (WDRC) : ", J_WDRC_mean[0])
                         print(" std (WDRC) : ", J_WDRC_std[0])
                         
@@ -381,8 +381,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_DRCE_mean.append(J_DRCE_mean[0])
                         output_J_DRCE_std.append(J_DRCE_std[0])
                         
-                        output_J_MSE_DRCE_mean.append(J_DRCE_mean[0])
-                        output_J_MSE_DRCE_std.append(J_DRCE_std[0])
+                        output_J_MSE_DRCE_mean.append(J_MSE_DRCE_mean)
+                        output_J_MSE_DRCE_std.append(J_MSE_DRCE_std)
                         print(" Average cost (DRCE) : ", J_DRCE_mean[0])
                         print(" std (DRCE) : ", J_DRCE_std[0])
                         
@@ -395,8 +395,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_J_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
                         output_J_DRCMMSE_std.append(J_DRCMMSE_std[0])
                         
-                        output_J_MSE_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
-                        output_J_MSE_DRCMMSE_std.append(J_DRCMMSE_std[0])
+                        output_J_MSE_DRCMMSE_mean.append(J_MSE_DRCMMSE_mean)
+                        output_J_MSE_DRCMMSE_std.append(J_MSE_DRCMMSE_std)
                         print(" Average cost (DRCMMSE) : ", J_DRCMMSE_mean[0])
                         print(" std (DRCMMSE) : ", J_DRCMMSE_std[0])
                         
