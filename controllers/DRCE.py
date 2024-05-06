@@ -85,7 +85,7 @@ class DRCE:
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([10*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-5 , 'disp': False, 'maxiter': 5000})
+        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-5 , 'disp': False, 'maxiter': 5000})
 
         optimal_penalty = output.x
         print("DRCE Optimal penalty (lambda_star):", optimal_penalty[0])
@@ -281,7 +281,7 @@ class DRCE:
         # self.previousX = sol[0].value
         # self.previousM = sol[4].value
         #S_opt = S.value
-        print("X_post norm : " , np.linalg.norm(sol[0].value))
+        #print("X_post norm : " , np.linalg.norm(sol[0].value))
         #print("Kalman gain norm : ", np.linalg.norm(S_xy_opt @ np.linalg.inv(S_yy_opt)))
         Sigma_wc_opt = sol[1].value
         cost = prob.value

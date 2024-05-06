@@ -129,9 +129,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_v_list = [5]
         theta_x0 = 1.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
-        theta_w_list = [1.0]
+        theta_w_list = [0.5]
         theta_v_list = [5.0]
-        theta_x0 = 1.0
+        theta_x0 = 0.5
     else:
         theta_w_list = [0.5]
         theta_v_list = [5.0]
@@ -160,8 +160,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.1*np.ones((nx, 1))
-                        Sigma_w= 0.1*np.eye(nx)
+                        mu_w = 0.2*np.ones((nx, 1))
+                        Sigma_w= 0.2*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -194,7 +194,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 1.0*np.eye(ny) #observation noise covariance
+                        M = 2.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -1.0*np.ones(ny)
@@ -380,7 +380,7 @@ if __name__ == "__main__":
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
     parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
