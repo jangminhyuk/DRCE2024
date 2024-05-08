@@ -60,9 +60,9 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC+MMSE')
     surfaces.append(surface_wdrc)
-    labels.append('WDRC')
+    labels.append('WDRC+MMSE')
     #--------------
     #ax.scatter(drkf_lambda_values, drkf_theta_values, drkf_cost_values, label='DRKF')
 
@@ -77,9 +77,9 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     )
     
     # Plot smooth surface - DCE
-    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='purple', label='WDRC-MMSE')
+    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='yellow', label='WDRC+DRMMSE ambiguity w/ x and v')
     surfaces.append(surface_drcmmse)
-    labels.append('WDRC-MMSE')
+    labels.append('WDRC+DRMMSE ambiguity w/ x and v')
     
     #---------------------------
     # Interpolate cost values for smooth surface - DRKF
@@ -159,7 +159,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc,  color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc,  color='blue', label='WDRC+MMSE')
     surfaces.append(surface_wdrc)
     labels.append('WDRC')
     #--------------
@@ -175,7 +175,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     )
     
     # Plot smooth surface - DCE
-    surface_drcmmse = ax.plot_surface(theta_w_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.9, color='purple', label='WDRC-MMSE')
+    surface_drcmmse = ax.plot_surface(theta_w_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.9, color='aqua', label='WDRC+DRMMSE')
     surfaces.append(surface_drcmmse)
     labels.append('WDRC+DRMMSE')
     
