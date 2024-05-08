@@ -97,26 +97,71 @@ def save_data(path, data):
 def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results, noise_plot_results, infinite):
     #noise_plot_results = True
     seed = 2024 # Random seed !  any value
-    
-    
+    if noise_plot_results:
+        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
+    else:
+        num_noise_list = [num_noise_samples]
+    num_x0_samples = 15 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
     #-------Initialization-------
-    nx = 10 #state dimension
-    nu = 10 #control input dimension
-    ny = 9#output dimension
-    temp = np.ones((nx, nx))
-    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
-    B = Q = R = Qf = np.eye(10)
-    #C = np.eye(10)
-    C = np.hstack([np.eye(9), np.zeros((9,1))])
+    nx = 21
+    nu = 11
+    ny = 10
+    A = np.array([[-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,  0,	0,	0],
+                    [0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	-1,	0,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1]
+                    ])
+    B = np.array([[1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	1,	0,  0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1]])
+    C = np.zeros((10,21))
+    C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17]=C[9][19]= 1
+    Q = Qf = np.eye(21)
+    R = np.eye(11) 
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
-    lambda_ = 15 # will not be used if the parameter "use_lambda = False"
+    use_lambda = True
+    lambda_ = 20 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
@@ -124,29 +169,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if dist == "normal":
         theta_w_list = [1.0]
         theta_v_list = [5.0]
-        theta_x0 = 2.0 # radius of initial state ambiguity set
+        theta_x0 = 0.5 # radius of initial state ambiguity set
     elif dist == "quadratic":
-        theta_w_list = [1.0]
+        theta_w_list = [0.5]
         theta_v_list = [5.0]
-        theta_x0 = 2.0
+        theta_x0 = 0.5
     else:
         theta_w_list = [0.5]
         theta_v_list = [5.0]
         theta_x0 = 0.5
         
-    #Sample size
-    num_x0_samples = 20 #  x0 samples 
-    if dist=='normal':
-        num_samples=num_noise_samples=15
-        num_x0_samples=10
-    else:
-        num_samples=num_noise_samples=15
-        num_x0_samples=15
-        
-    if noise_plot_results:
-        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
-    else:
-        num_noise_list = [num_noise_samples]
+    #theta_x0 = 1.0 # radius of initial state ambiguity set
     
     for noise_dist in noisedist:
         for theta_w in theta_w_list:
@@ -169,21 +202,21 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.1*np.ones((nx, 1))
+                        mu_w = 1.0*np.ones((nx, 1))
                         Sigma_w= 0.1*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.2*np.ones((nx,1))
-                        x0_cov = 0.2*np.eye(nx)
+                        x0_mean = 0.1*np.ones((nx,1))
+                        x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
-                        w_min = -0.5*np.ones(nx)
+                        w_max = 0.8*np.ones(nx)
+                        w_min = -0.4*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 1.0*np.ones(nx)
+                        x0_max = 0.5*np.ones(nx)
                         x0_min = 0.0*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
@@ -203,11 +236,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 3.0*np.eye(ny) #observation noise covariance
-                        mu_v = 1.0*np.ones((ny, 1))
+                        M = 1.0*np.eye(ny) #observation noise covariance
+                        mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -3.0*np.ones(ny)
-                        v_max = 1.0*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -388,7 +421,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
+    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
