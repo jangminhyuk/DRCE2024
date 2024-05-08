@@ -160,7 +160,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # change True to False if you don't want to use given lambda
-    use_lambda = False
+    use_lambda = True
     lambda_ = 20 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
@@ -182,11 +182,15 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     
     # Save lambda list
     WDRC_lambda, DRCE_lambda = [],[]
+    if dist=="normal":
+        WDRC_lambda = np.array([26.34143107,26.19039103,26.18078076, 26.35118012, 26.34388637,26.41069307,26.43890833,26.37858962])
+        DRCE_lambda = np.array([33.48457116,24.88295286,29.88295286, 26.11794908, 41.23743455,37.79841163,24.88295283,41.9427268])
     
     for noise_dist in noisedist:
         for theta_w in theta_w_list:
             for theta in theta_v_list:
-                for num_noise in num_noise_list:
+                for idx, num_noise in enumerate(num_noise_list):
+                    
                     print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ theta_w : ", theta_w, "/ theta_v : ", theta)
                     np.random.seed(seed) # fix Random seed!
                     print("--------------------------------------------")
@@ -286,7 +290,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
                         
                     else:
+                        lambda_ = WDRC_lambda[idx]
                         wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        lambda_ = DRCE_lambda[idx]
                         drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
 

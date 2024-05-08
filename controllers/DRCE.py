@@ -85,7 +85,7 @@ class DRCE:
         self.infimum_penalty = self.binarysearch_infimum_penalty_finite()
         print("Infimum penalty:", self.infimum_penalty)
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-5 , 'disp': False, 'maxiter': 2000})
+        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-4 , 'disp': False, 'maxiter': 2000})
 
         optimal_penalty = output.x
         print("DRCE Optimal penalty (lambda_star):", optimal_penalty[0])
