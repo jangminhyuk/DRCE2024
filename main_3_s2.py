@@ -185,7 +185,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     if dist=="normal":
         WDRC_lambda = np.array([26.34143107,26.19039103,26.18078076, 26.35118012, 26.34388637,26.41069307,26.43890833,26.37858962])
         DRCE_lambda = np.array([33.48457116,24.88295286,29.88295286, 26.11794908, 41.23743455,37.79841163,24.88295283,41.9427268])
-    
+    if dist=="quadratic":
+        WDRC_lambda = np.array([18.87666308,18.7484699,18.74756524,18.80383666,18.82131455,18.80761571,18.80725452,18.81723037])
+        DRCE_lambda = np.array([23.18145298,24.10406804,24.23323306,24.12338794,24.37121105,24.11266051,24.3302905,24.34608978])
     for noise_dist in noisedist:
         for theta_w in theta_w_list:
             for theta in theta_v_list:
