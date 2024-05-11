@@ -81,7 +81,7 @@ class WDRC:
         print("Infimum penalty:", self.infimum_penalty)
         #Optimize penalty using nelder-mead method
         print("Optimizing lambda . . . Please wait for a while")
-        output = minimize(self.objective, x0=np.array([5*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-4 , 'disp': False, 'maxiter': 2000})  
+        output = minimize(self.objective, x0=np.array([4*self.infimum_penalty]), method='L-BFGS-B', options={'eps': 1e-4 , 'disp': False, 'maxiter': 1000})  
         optimal_penalty = output.x
         print("WDRC Optimal penalty (lambda_star) :", optimal_penalty[0], " when theta_w : ", self.theta_w, "\n\n")
         return optimal_penalty
@@ -297,7 +297,7 @@ class WDRC:
         return obs
 
     def backward(self):
-
+        offline_start = time.time()
         self.P[self.T] = self.Qf
         if self.lambda_ <= np.max(np.linalg.eigvals(self.P[self.T])) or self.lambda_<= np.max(np.linalg.eigvals(self.P[self.T] + self.S[self.T])):
             print("t={}: False!".format(self.T))
@@ -317,7 +317,10 @@ class WDRC:
             if status in ["infeasible", "unbounded"]:
                 print(status, 'False!!!!!!!!!!!!!')
             self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], sigma_wc[t])
-            
+        
+        
+        offline_end = time.time()
+        self.offline_time = offline_end - offline_start # time consumed for offline process
 
     def forward(self):
         #Apply the controller forward in time.
@@ -392,6 +395,7 @@ class WDRC:
                 'output_traj': y,
                 'control_traj': u,
                 'cost': J,
-                'mse':self.J_mse}
+                'mse':self.J_mse,
+                'offline_time':self.offline_time}
 
 
