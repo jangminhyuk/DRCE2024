@@ -113,7 +113,7 @@ class DRLQC:
         rho_w=self.rho_w,
         rho_v=self.rho_v,
         rho_x0 = self.rho_x0,
-        tol=np.nan,
+        tol=self.tol,
         tensors=True,
         )
 
@@ -195,7 +195,7 @@ class DRLQC:
         offline_start = time.time()
         # FW
         obj_vals_fw, duality_gap_fw, X0_k_fw, W_k_fw, V_k_fw = FW(
-        X0_k=self.x0_cov, W_k=self.W_hat, V_k=self.V_hat, iter_max=self.iter_max, delta=self.delta, params=self.params
+        X0_k=self.x0_cov_hat, W_k=self.W_hat, V_k=self.V_hat, iter_max=self.iter_max, delta=self.delta, params=self.params
         )
         self.V_opt = V_k_fw
         #print("V_opt shape : ",self.V_opt.shape)

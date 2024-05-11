@@ -168,7 +168,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         w_max = None
                         w_min = None
                         mu_w = 0.0*np.ones((nx, 1))
-                        Sigma_w= 0.5*np.eye(nx)
+                        Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -177,8 +177,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         x0_cov = 0.5*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
-                        w_min = -0.2*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
+                        w_min = -1.0*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
@@ -206,8 +206,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         M = 2.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -1.0*np.ones(ny)
-                        v_max = 1.0*np.ones(ny)
+                        v_min = -2.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -376,14 +376,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
     if infinite:
         if use_lambda:
-            print("Now use : python plot_params4.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params4.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
     else:
         if use_lambda:
-            print("Now use : python plot_params4.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params4.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 

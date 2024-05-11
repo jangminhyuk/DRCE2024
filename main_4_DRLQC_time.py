@@ -147,7 +147,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_v_list = [5.0]
         theta_x0 = 5.0
     
-    horizon_list = [1,2,3,4,5,6,7,8,9,10,20,30,40]
+    horizon_list = [10,20,30,40,50,60,70,80,90,100,200]
     
     # Save offline computation time for each method
     lqg_time_avg = []
@@ -378,7 +378,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             drce_time_std.append(np.std(drce_time_list))
             drlqc_time_std.append(np.std(drlqc_time_list))
             
-            print("Average time Calculated until time 1 ~ ",T)
+            print("Average time Calculated until time 10 ~ ",T)
             print("LQG (avg): ", lqg_time_avg)
             print("WDRC (avg): ", wdrc_time_avg)
             print("DRCE (avg): ", drce_time_avg)
