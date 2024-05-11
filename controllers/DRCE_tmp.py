@@ -244,7 +244,49 @@ class DRCE:
         
         prob = cp.Problem(obj, constraints)
         return prob
+    def create_DR_sdp(self):
+        V = cp.Variable((self.nx, self.nx), symmetric=True, name='V')
+        Sigma_wc = cp.Variable((self.nx, self.nx), symmetric=True, name='Sigma_wc')
+        Y = cp.Variable((self.nx,self.nx), name='Y')
+        X_pred = cp.Variable((self.nx,self.nx), symmetric=True, name='X_pred')
+        M_test = cp.Variable((self.ny, self.ny), symmetric=True, name='M_test')
+        Z = cp.Variable((self.ny, self.ny), name='Z')
         
+        #Parameters
+        S_var = cp.Parameter((self.nx,self.nx), name='S_var')
+        P_var = cp.Parameter((self.nx,self.nx), name='P_var')
+        Lambda_ = cp.Parameter(1, name='Lambda_')
+        Sigma_w = cp.Parameter((self.nx, self.nx), name='Sigma_w') # nominal Sigma_w
+        x_cov = cp.Parameter((self.nx, self.nx), name='x_cov') # x_cov from before time step
+        M_hat = cp.Parameter((self.ny, self.ny), name='M_hat')
+        radi = cp.Parameter(nonneg=True, name='radi')
+               
+        #use Schur Complements
+        #obj function
+        obj = cp.Maximize(cp.trace(S_var @ V) + cp.trace((P_var - Lambda_ * np.eye(self.nx)) @ Sigma_wc) + 2*Lambda_*cp.trace(Y)) 
+        
+        #constraints
+        constraints = [
+                cp.bmat([[Sigma_w, Y],
+                         [Y.T, Sigma_wc]
+                         ]) >> 0,
+                X_pred == self.A @ x_cov @ self.A.T + Sigma_wc,
+                cp.bmat([[X_pred-V, X_pred @ self.C.T],
+                        [self.C @ X_pred, self.C @ X_pred @ self.C.T + M_test]
+                        ]) >> 0 ,
+                self.C @ X_pred @ self.C.T + M_test >>0,
+                cp.trace(M_hat + M_test - 2*Z ) <= radi**2,
+                cp.bmat([[M_hat, Z],
+                         [Z.T, M_test]
+                         ]) >> 0,
+                V>>0,
+                X_pred >>0,
+                M_test >>0,
+                Sigma_wc >>0
+                ]
+        
+        prob = cp.Problem(obj, constraints)
+        return prob    
     def solve_DR_sdp(self, prob, P_t1, S_t1, M, X_cov, Sigma_hat, theta, Lambda_):
         #construct problem
         params = prob.parameters()
@@ -267,22 +309,6 @@ class DRCE:
         S_xx_opt = sol[3].value
         S_xy_opt = S_xx_opt @ self.C.T
         S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
-        
-        # if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
-        #     print("Previous Mopt is larger !")
-        # if np.min(np.linalg.eigvals( sol[4].value - self.previousM)>0):
-        #     print("Next Mopt is larger !")
-        # if np.min(np.linalg.eigvals( self.previousX - sol[0].value )>0):
-        #     print("Previous X_post is larger !")
-        # if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
-        #     print("Next X_post is larger !")
-        # print("M_opt norm : ", np.linalg.norm(sol[4].value))
-        #print("X_post norm : " , np.linalg.norm(sol[0].value))
-        # self.previousX = sol[0].value
-        # self.previousM = sol[4].value
-        #S_opt = S.value
-        #print("X_post norm : " , np.linalg.norm(sol[0].value))
-        #print("Kalman gain norm : ", np.linalg.norm(S_xy_opt @ np.linalg.inv(S_yy_opt)))
         Sigma_wc_opt = sol[1].value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, Sigma_wc_opt, cost
@@ -371,6 +397,10 @@ class DRCE:
     def DR_kalman_filter_cov(self, P, S, M_hat, X_cov, Sigma_hat, Lambda):
         #Performs state estimation based on the current state estimate, control input and new observation
         theta = self.theta_v
+        X_cov_tmp = X_cov
+        M_hat_tmp = M_hat
+        
+        
         S_xx, S_xy, S_yy, Sigma_wc, cost = self.solve_DR_sdp(self.DR_sdp, P, S, M_hat, X_cov, Sigma_hat, theta, Lambda)
         
         X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
@@ -414,7 +444,7 @@ class DRCE:
         return obs
 
     def backward(self):
-        offline_start = time.time()
+
         self.P[self.T] = self.Qf
         if self.lambda_ <= np.max(np.linalg.eigvals(self.P[self.T])) or self.lambda_<= np.max(np.linalg.eigvals(self.P[self.T] + self.S[self.T])):
             print("t={}: False!".format(self.T))
@@ -434,9 +464,7 @@ class DRCE:
         for t in range(self.T):
             print("DRCE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
-        
-        offline_end = time.time()
-        self.offline_time = offline_end - offline_start
+            
 
     def forward(self):
         #Apply the controller forward in time.
@@ -512,7 +540,6 @@ class DRCE:
                 'output_traj': y,
                 'control_traj': u,
                 'cost': J,
-                'mse':self.J_mse,
-                'offline_time':self.offline_time}
+                'mse':self.J_mse}
 
 

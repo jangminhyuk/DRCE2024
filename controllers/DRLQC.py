@@ -3,42 +3,150 @@
 
 import numpy as np
 import time
+from scipy.optimize import minimize
+from controllers.function_utils import *
+import cvxpy as cp
+import scipy
+import control
+#from generator_utils import random_pd_matrix_generator
+from controllers.function_utils import (
+    calculate_P,
+    FW,
+    Parameters,
+)
+import pymanopt
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import numpy as np
 
-class LQG:
-    def __init__(self, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat):
+# Controller from Taşkesen, Bahar, et al. "Distributionally Robust Linear Quadratic Control." arXiv preprint arXiv:2305.17037 (2023).
+# https://github.com/RAO-EPFL/DR-Control 
+class DRLQC:
+    def __init__(self, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat,x0_mean_hat, x0_cov_hat, tol):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
         self.A, self.B, self.C, self.Q, self.Qf, self.R, self.M = system_data
-        self.v_mean_hat = v_mean_hat
-        self.M_hat = M_hat
         self.nx = self.B.shape[0]
         self.nu = self.B.shape[1]
         self.ny = self.C.shape[0]
+        m = self.nu
+        n = self.nx
+        p = self.ny
+        self.A_big = np.zeros((n, n, T))
+        self.B_big = np.zeros((n, m, T))
+        self.C_big = np.zeros((p, n, T))
+        self.Q_big = np.zeros((n, n, T + 1))
+        self.R_big = np.zeros((m, m, T))
+        for i in range(T):
+            temp = np.ones((n, n))
+            self.A_big[:, :, i] = np.eye(n) + np.triu(temp, 1) - np.triu(temp, 2)
+            self.B_big[:, :, i] = np.eye(m)
+            self.C_big[:, :, i] = np.eye(p)
+            self.R_big[:, :, i] = np.eye(m)
+            self.Q_big[:, :, i] = np.eye(n)
+        self.Q_big[:, :, T] = np.eye(n)
+        self.P_ = calculate_P(A=self.A_big, B=self.B_big, Q=self.Q_big, R=self.R_big, T=self.T)
+        
+        self.v_mean_hat = v_mean_hat
+        self.V_hat = V_hat
+        self.W_hat = W_hat
+        self.V_opt = np.zeros_like(V_hat)
+        self.W_opt = np.zeros_like(W_hat)
+        self.tol = tol
+        self.iter_max = 500
+        self.delta = 0.95
+        self.m = m
+        self.n = n
+        self.p = p
         self.x0_mean = x0_mean
         self.x0_cov = x0_cov
         self.x0_mean_hat = x0_mean_hat
         self.x0_cov_hat = x0_cov_hat
+        self.X0_opt = np.zeros_like(x0_cov)
         self.mu_hat = mu_hat
-        self.Sigma_hat = Sigma_hat
         self.mu_w = mu_w
-        self.mu_v = mu_v # true
+        self.mu_v = mu_v
         self.Sigma_w = Sigma_w
-        
-        
-        
+        self.rho_w = theta_w
+        self.rho_v = theta_v
+        self.rho_x0 = theta_x0
         if self.dist=="uniform" or self.dist=="quadratic":
             self.x0_max = x0_max
             self.x0_min = x0_min
             self.w_max = w_max
             self.w_min = w_min
-
+            
         if self.noise_dist =="uniform" or self.noise_dist =="quadratic":
             self.v_max = v_max
             self.v_min = v_min
-
-        #Initial state
             
+        #---system----
+        if self.dist=="normal":
+            self.x0_init = self.normal(self.x0_mean, self.x0_cov)
+        elif self.dist=="uniform":
+            self.x0_init = self.uniform(self.x0_max, self.x0_min)
+        elif self.dist=="quadratic":
+            self.x0_init = self.quadratic(self.x0_max, self.x0_min)
+        #---noise----
+        if self.noise_dist=="normal":
+            self.true_v_init = self.normal(self.mu_v, self.M) #observation noise
+        elif self.noise_dist=="uniform":
+            self.true_v_init = self.uniform(self.v_max, self.v_min) #observation noise
+        elif self.noise_dist=="quadratic":
+            self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
+            
+        
+        print("DRLQC ", self.dist, " / ", self.noise_dist, " / rho_w : ", self.rho_w, " / rho_v : ", self.rho_v, " / rho_x0 : ", self.rho_x0)
+       
+        self.params = Parameters(
+        A=self.A_big,
+        B=self.B_big,
+        C=self.C_big,
+        Q=self.Q_big,
+        R=self.R_big,
+        T=self.T,
+        P=self.P_,
+        X0_hat=self.x0_cov,
+        V_hat=self.V_hat,
+        W_hat=self.W_hat,
+        rho_w=self.rho_w,
+        rho_v=self.rho_v,
+        rho_x0 = self.rho_x0,
+        tol=np.nan,
+        tensors=True,
+        )
+
+        #### Creating Block Matrices for SDP ####
+        self.R_block = np.zeros([T, T, m, m])
+        self.C_block = np.zeros([T, T + 1, p, n])
+        for t in range(T):
+            self.R_block[t, t] = self.R_big[:, :, t]
+            self.C_block[t, t] = self.C_big[:, :, t]
+        self.Q_block = np.zeros([n * (T + 1), n * (T + 1)])
+        for t in range(T + 1):
+            self.Q_block[t * n : t * n + n, t * n : t * n + n] = self.Q_big[:, :, t]
+
+        self.R_block = np.reshape(self.R_block.transpose(0, 2, 1, 3), (m * T, m * T))
+        # Q_block = np.reshape(Q_block.transpose(0, 2, 1, 3), (n * (T + 1), n * (T + 1)))
+        self.C_block = np.reshape(self.C_block.transpose(0, 2, 1, 3), (p * T, n * (T + 1)))
+
+        # initialize H and G as zero matrices
+        self.G = np.zeros((n * (T + 1), n * (T + 1)))
+        self.H = np.zeros((n * (T + 1), m * T))
+        for t in range(T + 1):
+            for s in range(t + 1):
+                # breakpoint()
+                # print(GG[t * n : t * n + n, s * n : s * n + n])
+                self.G[t * n : t * n + n, s * n : s * n + n] = cumulative_product(self.A_big, s, t)
+                if t != s:
+                    self.H[t * n : t * n + n, s * m : s * m + m] = (
+                        cumulative_product(self.A_big, s + 1, t) @ self.B_big[:, :, s]
+                    )
+        self.D = np.matmul(self.C_block, self.G)
+        self.inv_cons = np.linalg.inv(self.R_block + self.H.T @ self.Q_block @ self.H)
+        
+        #-----For LQG
         self.J = np.zeros(self.T+1)
         self.P = np.zeros((self.T+1, self.nx, self.nx))
         self.S = np.zeros((self.T+1, self.nx, self.nx))
@@ -46,7 +154,7 @@ class LQG:
         self.z = np.zeros(self.T+1)
         self.K = np.zeros(( self.T, self.nu, self.nx))
         self.L = np.zeros(( self.T, self.nu, 1))
-
+        
 
     def uniform(self, a, b, N=1):
         n = a.shape[0]
@@ -61,7 +169,6 @@ class LQG:
         else:
             x = mu + np.linalg.cholesky(Sigma) @ w.T
         return x
-    
     def quad_inverse(self, x, b, a):
         row = x.shape[0]
         col = x.shape[1]
@@ -83,6 +190,20 @@ class LQG:
         x = self.quad_inverse(x, wmax, wmin)
         return x.T
     
+    def solve_sdp(self):
+        print("Solving DRLQC SDP . . . (Frank-Wolfe Algorithm)")
+        offline_start = time.time()
+        # FW
+        obj_vals_fw, duality_gap_fw, X0_k_fw, W_k_fw, V_k_fw = FW(
+        X0_k=self.x0_cov, W_k=self.W_hat, V_k=self.V_hat, iter_max=self.iter_max, delta=self.delta, params=self.params
+        )
+        self.V_opt = V_k_fw
+        #print("V_opt shape : ",self.V_opt.shape)
+        self.W_opt = W_k_fw
+        self.X0_opt = X0_k_fw
+        # now, solve standard LQG problem using this worst case V, W, and X0
+        self.offline_time = time.time() - offline_start
+      
     def kalman_filter_cov(self, M_hat, P, P_w=None):
         #Performs state estimation based on the current state estimate, control input and new observation
         if P_w is None:
@@ -93,6 +214,7 @@ class LQG:
             P_ = self.A @ P @ self.A.T + P_w
 
         #Measurement update
+        
         temp = np.linalg.solve(self.C @ P_ @ self.C.T + M_hat, self.C @ P_)
         P_new = P_ - P_ @ self.C.T @ temp
         return P_new
@@ -136,20 +258,19 @@ class LQG:
     def backward(self):
         offline_start = time.time()
         #Compute P, S, r, z, K and L backward in time
-
+        print("DRLQC Backward")
         self.P[self.T] = self.Qf
         Phi = self.B @ np.linalg.inv(self.R) @ self.B.T
         for t in range(self.T-1, -1, -1):
-             self.P[t], self.S[t], self.r[t], self.z[t], self.K[t], self.L[t]  = self.riccati(Phi, self.P[t+1], self.S[t+1], self.r[t+1], self.z[t+1], self.Sigma_hat[t], self.mu_hat[t])
+             self.P[t], self.S[t], self.r[t], self.z[t], self.K[t], self.L[t]  = self.riccati(Phi, self.P[t+1], self.S[t+1], self.r[t+1], self.z[t+1], self.W_opt[:,:,t], self.mu_hat[t])
         
         self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
-        self.x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov_hat)
+        self.x_cov[0] = self.kalman_filter_cov(self.V_opt[:,:,0], self.X0_opt)
         for t in range(self.T):
-            self.x_cov[t+1] = self.kalman_filter_cov(self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t])
+            self.x_cov[t+1] = self.kalman_filter_cov(self.V_opt[:,:,t+1], self.x_cov[t], self.W_opt[:,:,t])  
         
-        offline_end = time.time()
-        self.offline_time = offline_end - offline_start # time consumed for offline process
-            
+        self.offline_time = self.offline_time + time.time() - offline_start # Combine Time used for solving Frank-Wolfe Algorithm
+
     def forward(self):
         #Apply the controller forward in time.
         start = time.time()
@@ -159,6 +280,9 @@ class LQG:
 
         x_mean = np.zeros((self.T+1, self.nx, 1))
         J = np.zeros(self.T+1)
+        mu_wc = np.zeros((self.T, self.nx, 1))
+        sigma_wc = np.zeros((self.T, self.nx, self.nx))
+
         #---system----
         if self.dist=="normal":
             x[0] = self.normal(self.x0_mean, self.x0_cov)
@@ -175,8 +299,7 @@ class LQG:
             true_v = self.quadratic(self.v_max, self.v_min) #observation noise
             
         y[0] = self.get_obs(x[0], true_v) #initial observation
-        x_mean[0] = self.kalman_filter(self.v_mean_hat[0] , self.M_hat[0], self.x0_mean_hat, self.x_cov[0], y[0]) #initial state estimation
-        
+        x_mean[0] = self.kalman_filter(self.v_mean_hat[0], self.V_opt[:,:,0], self.x0_mean_hat, self.X0_opt, y[0]) #initial state estimation
         for t in range(self.T):
             #disturbance sampling
             if self.dist=="normal":
@@ -192,25 +315,30 @@ class LQG:
                 true_v = self.uniform(self.v_max, self.v_min) #observation noise
             elif self.noise_dist=="quadratic":
                 true_v = self.quadratic(self.v_max, self.v_min) #observation noise
+
             #Apply the control input to the system
             u[t] = self.K[t] @ x_mean[t] + self.L[t]
             x[t+1] = self.A @ x[t] + self.B @ u[t] + true_w
             y[t+1] = self.get_obs(x[t+1], true_v)
 
-            #Update the state estimation (using the nominal mean and covariance)
-            x_mean[t+1] = self.kalman_filter(self.v_mean_hat[t+1], self.M_hat[t+1], x_mean[t], self.x_cov[t+1], y[t+1], self.mu_hat[t], u=u[t])
-       
-       
+            #Update the state estimation
+            #print(self.V_opt[:,:,t+1])
+            if t<self.T-1:
+                x_mean[t+1] = self.kalman_filter(self.v_mean_hat[t+1], self.V_opt[:,:,t+1], x_mean[t], self.x_cov[t+1], y[t+1], self.mu_hat[t], u=u[t])
+        
+        
         self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
         #Collect Estimation MSE 
         for t in range(self.T):
             self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
-
+            
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
         for t in range(self.T-1, -1, -1):
             J[t] = J[t+1] + x[t].T @ self.Q @ x[t] + u[t].T @ self.R @ u[t]
 
+        
+        
         end = time.time()
         time_ = end-start
         return {'comp_time': time_,
@@ -220,3 +348,5 @@ class LQG:
                 'cost': J,
                 'mse':self.J_mse,
                 'offline_time':self.offline_time}
+
+

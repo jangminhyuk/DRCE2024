@@ -12,7 +12,9 @@ This repository includes the source code for implementing Linear-Quadratic-Gauss
 - **[CVXPY](https://www.cvxpy.org/)**
 - **[MOSEK (>= 9.3)](https://www.mosek.com/)**
 - (pickle5) if relevant error occurs
-
+## Additional Requirements to run DRLQC paper
+- Pytorch 2.0
+- [Pymanopt] https://pymanopt.org/
 
 ## Code explanation
 
