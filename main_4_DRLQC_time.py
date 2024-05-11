@@ -102,11 +102,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     seed = 2024 # Random seed !  any value
     
     # --- for DRLQC --- #
-    iter_max = 500
-    tol = 1e-8
-    # delta = 0.95
-    # T = 10
-    # replications = 10
+    tol = 1e-3
     # --- ----- --------#
     
     if noise_plot_results:
@@ -147,8 +143,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_v_list = [5.0]
         theta_x0 = 5.0
     
-    horizon_list = [10,20,30,40,50,60,70,80,90,100,200]
-    
+    horizon_list = [10,20,30,40,50,60,70,80,90,100,200,300,400]
+    horizon_list = [60,70,80,90,100,200,300,400]
     # Save offline computation time for each method
     lqg_time_avg = []
     wdrc_time_avg = []
@@ -161,7 +157,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     for noise_dist in noisedist:
         for T in horizon_list:
             lqg_time_list, wdrc_time_list, drce_time_list, drlqc_time_list=[], [], [], []
-            for idx in range(10):
+            for idx in range(1):
                 num_noise = num_noise_list[0]
                 theta_w = theta_w_list[0]
                 theta = theta_v_list[0]
@@ -378,7 +374,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             drce_time_std.append(np.std(drce_time_list))
             drlqc_time_std.append(np.std(drlqc_time_list))
             
-            print("Average time Calculated until time 10 ~ ",T)
+            print("Average offline computation time: For Time horizon 10 ~ ",T)
             print("LQG (avg): ", lqg_time_avg)
             print("WDRC (avg): ", wdrc_time_avg)
             print("DRCE (avg): ", drce_time_avg)
