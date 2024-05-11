@@ -15,6 +15,7 @@ from controllers.inf_DRCE import inf_DRCE
 import os
 import pickle
 import control
+import time
 
 def uniform(a, b, N=1):
     n = a.shape[0]
@@ -144,7 +145,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_x0 = 5.0
     
     horizon_list = [10,20,30,40,50,60,70,80,90,100,200,300,400]
-    horizon_list = [60,70,80,90,100,200,300,400]
+    
     # Save offline computation time for each method
     lqg_time_avg = []
     wdrc_time_avg = []
@@ -157,7 +158,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     for noise_dist in noisedist:
         for T in horizon_list:
             lqg_time_list, wdrc_time_list, drce_time_list, drlqc_time_list=[], [], [], []
-            for idx in range(1):
+            for idx in range(10):
                 num_noise = num_noise_list[0]
                 theta_w = theta_w_list[0]
                 theta = theta_v_list[0]
@@ -258,10 +259,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 system_data = (A, B, C, Q, Qf, R, M)
                 
                 #-------Perform n  independent simulations and summarize the results-------
-                output_lqg_list = []
-                output_wdrc_list = []
-                output_drce_list = []
-                output_drlqc_list = []
+                
                 
                 #Initialize controllers
                 if infinite:
@@ -275,88 +273,30 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     drlqc = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol)
                     lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
                 
+                # --- DRLQC --- #
                 
-                drlqc.solve_sdp()
-                drlqc.backward()
+                if T<=50: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
+                    start = time.time()
+                    drlqc.solve_sdp()
+                    drlqc.backward()
+                    end = time.time()
+                    print("DRLQC Offline Computation time : ", end-start)
+                    drlqc_time_list.append(end-start)
                 
+                # --- DRCE --- #
+                start = time.time()
                 drce.backward()
+                end = time.time()
+                print("DRCE Offline Computation time : ", end-start)
+                drce_time_list.append(end-start)
+                
+                # --- WDRC --- #
+                start = time.time()
                 wdrc.backward()
-                lqg.backward()
+                end = time.time()
+                print("WDRC Offline Computation time : ", end-start)
+                wdrc_time_list.append(end-start)
                     
-                print('---------------------')
-                
-                #----------------------------
-                print("Running DRCE Forward step ...")
-                for i in range(num_sim):
-                    
-                    #Perform state estimation and apply the controller  
-                    output_drce = drce.forward()
-                    output_drce_list.append(output_drce)
-                
-                    #print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
-                #----------------------------
-                print("Running DRLQC Forward step ...")
-                for i in range(num_sim):
-                    
-                    #Perform state estimation and apply the controller
-                    output_drlqc = drlqc.forward()
-                    output_drlqc_list.append(output_drlqc)
-                
-                    #print('cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
-                
-                #----------------------------             
-                np.random.seed(seed) # fix Random seed!
-                print("Running WDRC Forward step ...")  
-                for i in range(num_sim):
-            
-                    #Perform state estimation and apply the controller
-                    output_wdrc = wdrc.forward()
-                    output_wdrc_list.append(output_wdrc)
-                    #print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
-                
-                #----------------------------
-                np.random.seed(seed) # fix Random seed!
-                print("Running LQG Forward step ...")
-                for i in range(num_sim):
-                    
-                    #Perform state estimation and apply the controller
-                    output_lqg = lqg.forward()
-                    output_lqg_list.append(output_lqg)
-                    #print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
-                
-                
-                # -------------------------
-                # Collect State Estimation errors
-                J_MSE_LQG_list,J_MSE_WDRC_list,J_MSE_DRCE_list,J_MSE_DRLQC_list = [],[],[],[]
-                for out in output_lqg_list:
-                    J_MSE_LQG_list.append(out['mse'])
-                for out in output_wdrc_list:
-                    J_MSE_WDRC_list.append(out['mse'])
-                for out in output_drce_list:
-                    J_MSE_DRCE_list.append(out['mse'])
-                for out in output_drlqc_list:
-                    J_MSE_DRLQC_list.append(out['mse'])
-                    
-                J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
-                J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
-                J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
-                J_MSE_DRLQC_mean = np.mean(J_MSE_DRLQC_list)
-                print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
-                print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
-                print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
-                print("J_MSE_DRLQC_mean : ", J_MSE_DRLQC_mean)
-                # --------------------------
-                # Offline Computation Time 
-                print("LQG Offline Computation time : ", output_lqg['offline_time'])
-                print("WDRC Offline Computation time : ", output_wdrc['offline_time'])
-                print("DRCE Offline Computation time : ", output_drce['offline_time'])
-                print("DRLQC Offline Computation time : ", output_drlqc['offline_time'])
-                
-                lqg_time_list.append(output_lqg['offline_time'])
-                wdrc_time_list.append(output_wdrc['offline_time'])
-                drce_time_list.append(output_drce['offline_time'])
-                drlqc_time_list.append(output_drlqc['offline_time'])
-            
                 
             if infinite:
                 path = "./results/{}_{}/infinite/multiple/DRLQC/".format(dist, noise_dist)
@@ -365,22 +305,20 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             if not os.path.exists(path):
                 os.makedirs(path)
             
-            lqg_time_avg.append(np.mean(lqg_time_list))
             wdrc_time_avg.append(np.mean(wdrc_time_list))
             drce_time_avg.append(np.mean(drce_time_list))
-            drlqc_time_avg.append(np.mean(drlqc_time_list))
-            lqg_time_std.append(np.std(lqg_time_list))
+            
             wdrc_time_std.append(np.std(wdrc_time_list))
             drce_time_std.append(np.std(drce_time_list))
-            drlqc_time_std.append(np.std(drlqc_time_list))
+            if T<=50:
+                drlqc_time_std.append(np.std(drlqc_time_list))
+                drlqc_time_avg.append(np.mean(drlqc_time_list))
             
             print("Average offline computation time: For Time horizon 10 ~ ",T)
-            print("LQG (avg): ", lqg_time_avg)
             print("WDRC (avg): ", wdrc_time_avg)
             print("DRCE (avg): ", drce_time_avg)
             print("DRLQC (avg): ", drlqc_time_avg)
             print("Standard Deviation")
-            print("LQG (std): ", lqg_time_std)
             print("WDRC (std): ", wdrc_time_std)
             print("DRCE (std): ", drce_time_std)
             print("DRLQC (std): ", drlqc_time_std)
@@ -391,15 +329,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
         if not os.path.exists(path):
             os.makedirs(path)    
-        save_data(path + 'drlqc_avgT.pkl', np.mean(lqg_time_list))
-        save_data(path + 'drce_avgT.pkl', np.mean(drce_time_list))
-        save_data(path + 'wdrc_avgT.pkl', np.mean(wdrc_time_list))
-        save_data(path + 'lqg_avgT.pkl', np.mean(lqg_time_list))
+        save_data(path + 'drlqc_avgT.pkl', drlqc_time_avg)
+        save_data(path + 'drce_avgT.pkl', drce_time_avg)
+        save_data(path + 'wdrc_avgT.pkl', wdrc_time_avg)
         
-        save_data(path + 'drlqc_stdT.pkl', np.std(lqg_time_list))
-        save_data(path + 'drce_stdT.pkl', np.std(drce_time_list))
-        save_data(path + 'wdrc_stdT.pkl', np.std(wdrc_time_list))
-        save_data(path + 'lqg_stdT.pkl', np.std(lqg_time_list))
+        save_data(path + 'drlqc_stdT.pkl', drlqc_time_std)
+        save_data(path + 'drce_stdT.pkl', drce_time_std)
+        save_data(path + 'wdrc_stdT.pkl', wdrc_time_std)
             
         print('\n-------Summary-------')
         print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
