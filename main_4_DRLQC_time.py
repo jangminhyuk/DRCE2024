@@ -118,7 +118,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     nu = 10 #control input dimension
     ny = 10#output dimension
     temp = np.ones((nx, nx))
-    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    A = 0.1*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10)
     C = np.eye(10)
     #C = np.hstack([np.eye(9), np.zeros((9,1))])

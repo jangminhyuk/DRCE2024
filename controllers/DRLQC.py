@@ -40,7 +40,7 @@ class DRLQC:
         self.R_big = np.zeros((m, m, T))
         for i in range(T):
             temp = np.ones((n, n))
-            self.A_big[:, :, i] = np.eye(n) + np.triu(temp, 1) - np.triu(temp, 2)
+            self.A_big[:, :, i] = 0.1*(np.eye(n) + np.triu(temp, 1) - np.triu(temp, 2))
             self.B_big[:, :, i] = np.eye(m)
             self.C_big[:, :, i] = np.eye(p)
             self.R_big[:, :, i] = np.eye(m)
