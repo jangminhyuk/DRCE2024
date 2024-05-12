@@ -24,23 +24,23 @@ def summarize_noise( avg_time_drlqc, std_time_drlqc, avg_time_wdrc, std_time_wdr
     fig= plt.figure(figsize=(6,4), dpi=300)
     
     #----------------------------------------------
-    plt.plot(t[:5], drlqc_avgT, color='tab:purple', label='DRLQC')
-    plt.fill_between(t[:5], drlqc_avgT + 2*drlqc_stdT, drlqc_avgT - 2*drlqc_stdT, facecolor='tab:purple', alpha=0.3)
+    plt.plot(t[:5], drlqc_avgT, color='dimgrey', label='DRLQC')
+    plt.fill_between(t[:5], drlqc_avgT + 2*drlqc_stdT, drlqc_avgT - 2*drlqc_stdT, facecolor='grey', alpha=0.3)
     
-    plt.plot(t, wdrc_avgT, color='tab:blue', label='WDRC')
-    plt.fill_between(t, wdrc_avgT + 2*wdrc_stdT, wdrc_avgT - 2*wdrc_stdT, facecolor='tab:blue', alpha=0.3)
+    # plt.plot(t, wdrc_avgT, color='tab:blue', label='WDRC')
+    # plt.fill_between(t, wdrc_avgT + 2*wdrc_stdT, wdrc_avgT - 2*wdrc_stdT, facecolor='tab:blue', alpha=0.3)
     
     plt.plot(t, drce_avgT,  color='tab:green', label='WDR-CE')
     plt.fill_between(t, drce_avgT + 2*drce_stdT, drce_avgT - 2*drce_stdT, facecolor='tab:green', alpha=0.3)
     
     plt.xscale('log')
-    #plt.yscale('log')
+    plt.yscale('log')
     plt.xlabel(r'Time horizon', fontsize=16)
     plt.ylabel(r'Computation Time (s)', fontsize=16)
     plt.legend(fontsize=16)
     plt.grid(True, which="both",ls="-", alpha=0.3)
-    plt.xlim(left=9,right=400)
-    plt.ylim(bottom=1, top=drlqc_avgT[-1]*1.05) # For visibility
+    plt.xlim(left=9,right=t[-1])
+    plt.ylim(bottom=2) # For visibility
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     plt.savefig(path +'/Computation_Time_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight")
