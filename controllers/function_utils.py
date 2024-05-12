@@ -502,6 +502,7 @@ def FW(X0_k, W_k, V_k, iter_max, delta, params):
         if iter%10==0:
             print("Iteration ",iter,"| Duality Gap : ", dg)
         if dg <= tol:
+            print("Iteration ",iter,"| Duality Gap : ", dg)
             break
     return obj_vals, duality_gap, X0_k, W_k, V_k
 
