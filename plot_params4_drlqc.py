@@ -139,7 +139,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
 
     # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(theta_w_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
+    surface_lqg =ax.plot_surface(theta_w_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.5, color='red', label='LQG')
     surfaces.append(surface_lqg)
     labels.append('LQG')
     #-------------------------
@@ -175,7 +175,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     )
     
     # Plot smooth surface - DCE
-    surface_drlqc = ax.plot_surface(theta_w_grid_drlqc, theta_v_grid_drlqc, cost_grid_drlqc, alpha=0.5, color='yellow', label='DRLQC')
+    surface_drlqc = ax.plot_surface(theta_w_grid_drlqc, theta_v_grid_drlqc, cost_grid_drlqc, alpha=0.6, color='gold', label='DRLQC')
     surfaces.append(surface_drlqc)
     labels.append('DRLQC')
     
@@ -255,8 +255,8 @@ if __name__ == "__main__":
     
     theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] # radius of noise ambiguity set
     #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
-    theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
-    theta_v_list = [5.0, 10.0, 15.0]
+    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0]
+    #theta_v_list = [5.0, 10.0, 15.0]
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0]
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
