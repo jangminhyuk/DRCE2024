@@ -167,7 +167,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 1.0*np.ones((nx, 1))
+                        mu_w = 0.0*np.ones((nx, 1))
                         Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
@@ -202,7 +202,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         v_max = None
                         v_min = None
                         M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = -2.0*np.ones((ny, 1))
+                        mu_v = 0.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -5.0*np.ones(ny)
                         v_max = 0.0*np.ones(ny)
@@ -364,7 +364,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     else:
                         save_data(path + 'drlqc' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRLQC_mean)
                         save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
-                        save_data(path + 'wdrc' + theta_v_ + '.pkl', J_WDRC_mean)
+                        save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
             
