@@ -119,19 +119,16 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #-------Initialization-------
     nx = 10 #state dimension
     nu = 10 #control input dimension
-    ny = 6#output dimension
+    ny = 10#output dimension
     temp = np.ones((nx, nx))
-    A = (np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
+    A = 0.1*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10)
-    #C = np.eye(10)
-    C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
-    print("Observability Matrix Rank : ", np.linalg.matrix_rank(control.obsv(A,C)))
-    print("Controllability Matrix Rank : ", np.linalg.matrix_rank(control.ctrb(A,B)))
+    C = np.eye(10)
     #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     # change True to False if you don't want to use given lambda
-    use_lambda = False
-    lambda_ = 20 # will not be used if the parameter "use_lambda = False"
+    use_lambda = True
+    lambda_ = 5 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set

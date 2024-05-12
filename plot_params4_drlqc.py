@@ -220,16 +220,11 @@ if __name__ == "__main__":
     parser.add_argument('--use_lambda', required=False, action="store_true") #use lambda results if flagged
     args = parser.parse_args()
     
-    if args.infinite:
-        if args.use_lambda:
-            path = "./results/{}_{}/infinite/multiple/params_lambda/DRLQC/".format(args.dist, args.noise_dist)
-        else:
-            path = "./results/{}_{}/infinite/multiple/params_thetas/DRLQC/".format(args.dist, args.noise_dist)
+    
+    if args.use_lambda:
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(args.dist, args.noise_dist)
     else:
-        if args.use_lambda:
-            path = "./results/{}_{}/finite/multiple/params_lambda/DRLQC/".format(args.dist, args.noise_dist)
-        else:
-            path = "./results/{}_{}/finite/multiple/params_thetas/DRLQC/".format(args.dist, args.noise_dist)
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(args.dist, args.noise_dist)
 
     #Load data
     drlqc_theta_w_values =[]

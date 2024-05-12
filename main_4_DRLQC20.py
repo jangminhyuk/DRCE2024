@@ -110,10 +110,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     # --- ----- --------#
     
     if noise_plot_results:
-        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
+        num_noise_list = [10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 10 # num x0 samples 
+    num_x0_samples = 20 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
@@ -183,9 +183,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_v_list = [3.0]
         theta_x0 = 3.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
-        theta_w_list = [1.0]
-        theta_v_list = [2.0]
-        theta_x0 = 2.0
+        theta_w_list = [3.0]
+        theta_v_list = [3.0]
+        theta_x0 = 3.0
     else:
         theta_w_list = [2.0]
         theta_v_list = [5.0]
@@ -328,7 +328,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                            print("Simulation #",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     #----------------------------
                     print("Running DRLQC Forward step ...")
                     for i in range(num_sim):
@@ -337,7 +337,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_drlqc = drlqc.forward()
                         output_drlqc_list.append(output_drlqc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
+                            print("Simulation #",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -348,7 +348,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                            print("Simulation #",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     #----------------------------
                     np.random.seed(seed) # fix Random seed!
@@ -359,7 +359,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                            print("Simulation #",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
                     
                     # -------------------------
@@ -499,8 +499,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=20, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=20, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot

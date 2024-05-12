@@ -201,9 +201,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     
                  
                     if use_lambda:
-                        path = "./results/{}_{}/finite/multiple/params_lambda/DRLQC/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(dist, noise_dist)
                     else:
-                        path = "./results/{}_{}/finite/multiple/params_thetas/DRLQC/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(dist, noise_dist)
                         
                     if not os.path.exists(path):
                         os.makedirs(path)
@@ -327,7 +327,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                            print("Simulation #",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     
                     J_DRCE_list = []
                     for out in output_drce_list:
@@ -347,7 +347,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_drlqc = drlqc.forward()
                         output_drlqc_list.append(output_drlqc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
+                            print("Simulation #",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
                     
                     J_DRLQC_list = []
                     for out in output_drlqc_list:
@@ -368,7 +368,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                            print("Simulation #",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     J_WDRC_list = []
                     for out in output_wdrc_list:
@@ -387,7 +387,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_lqg_list.append(output_lqg)
                 
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                            print("Simulation #",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                         
                     J_LQG_list = []
                     for out in output_lqg_list:

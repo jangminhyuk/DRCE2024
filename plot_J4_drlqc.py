@@ -14,12 +14,12 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     J_lqr_mean = np.array(avg_cost_lqg[0:])
     J_wdrc_mean = np.array(avg_cost_wdrc[0:])
     J_drce_mean = np.array(avg_cost_drce[0:])
-    J_drlqc_mean = np.array(avg_cost_drlqc[0:])
+    J_drlqc_mean = np.array(avg_cost_drlqc[2:])
     
     J_lqr_std = np.array(std_cost_lqg[0:])
     J_wdrc_std = np.array(std_cost_wdrc[0:])
     J_drce_std = np.array(std_cost_drce[0:])
-    J_drlqc_std = np.array(std_cost_drlqc[0:])
+    J_drlqc_std = np.array(std_cost_drlqc[2:])
     
     fig = plt.figure(figsize=(6,4), dpi=300)
     
@@ -30,8 +30,8 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     plt.plot(t, J_wdrc_mean, 'tab:blue', label='WDRC')
     plt.fill_between(t, J_wdrc_mean + 0.25*J_wdrc_std, J_wdrc_mean - 0.25*J_wdrc_std, facecolor='tab:blue', alpha=0.3)
     
-    plt.plot(t, J_drlqc_mean, 'tab:purple', label='DRLQC')
-    plt.fill_between(t, J_drlqc_mean + 0.25*J_drlqc_std, J_drlqc_mean - 0.25*J_drlqc_std, facecolor='tab:purple', alpha=0.3)
+    plt.plot(t[2:], J_drlqc_mean, 'tab:purple', label='DRLQC')
+    plt.fill_between(t[2:], J_drlqc_mean + 0.25*J_drlqc_std, J_drlqc_mean - 0.25*J_drlqc_std, facecolor='tab:purple', alpha=0.3)
     
     plt.plot(t, J_drce_mean, 'tab:green', label='WDR-CE')
     plt.fill_between(t, J_drce_mean + 0.25*J_drce_std, J_drce_mean - 0.25*J_drce_std, facecolor='tab:green', alpha=0.3)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         path = "./results/{}_{}/infinite/multiple/DRLQC/num_noise_plot".format(args.dist, args.noise_dist)
     else:
         path = "./results/{}_{}/finite/multiple/DRLQC/num_noise_plot".format(args.dist, args.noise_dist)
-    num_noise_list = [5, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40]
+    num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     avg_cost_lqg_file = open(path + '/lqg_mean.pkl', 'rb' )
     avg_cost_lqg = pickle.load(avg_cost_lqg_file)
     
