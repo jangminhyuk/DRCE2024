@@ -344,18 +344,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             # after running 10 repeated calcuatoin for this time T
             
                     
-    print("Data generation Completed!!")
+    print("Time Data generation Completed!!")
     
-    if noise_plot_results:
-        if infinite:
-            print("For noise sample size effect plot : Use python plot_J4_dlrqc.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
-        else:
-            print("For noise sample size effect plot : Use python plot_J4_drlqc.py --dist "+ dist + " --noise_dist " + noise_dist)
-    else:
-        if infinite:
-            print("For plot : Use python plot4_drlqc.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
-        else:
-            print("For plot : Use python plot4_drlqc.py --dist "+ dist + " --noise_dist " + noise_dist)
+    print("For plot : Use python plot_time.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
