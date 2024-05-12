@@ -112,23 +112,26 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 15 # num x0 samples 
+    num_x0_samples = 10 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
     #-------Initialization-------
     nx = 10 #state dimension
     nu = 10 #control input dimension
-    ny = 10#output dimension
+    ny = 6#output dimension
     temp = np.ones((nx, nx))
-    A = 0.1*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
+    A = (np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10)
-    C = np.eye(10)
+    #C = np.eye(10)
+    C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
+    print("Observability Matrix Rank : ", np.linalg.matrix_rank(control.obsv(A,C)))
+    print("Controllability Matrix Rank : ", np.linalg.matrix_rank(control.ctrb(A,B)))
     #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     # change True to False if you don't want to use given lambda
     use_lambda = False
-    lambda_ = 15 # will not be used if the parameter "use_lambda = False"
+    lambda_ = 20 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
@@ -137,6 +140,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_w_list = [1.0]
         theta_v_list = [1.0]
         theta_x0 = 1.0 # radius of initial state ambiguity set
+    elif dist == "quadratic":
+        theta_w_list = [3.0]
+        theta_v_list = [3.0]
+        theta_x0 = 3.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [3.0]
         theta_v_list = [3.0]
@@ -167,16 +174,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.0*np.ones((nx, 1))
+                        mu_w = 1.0*np.ones((nx, 1))
                         Sigma_w= 0.2*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.0*np.ones((nx,1))
-                        x0_cov = 0.1*np.eye(nx)
+                        x0_mean = 3.0*np.ones((nx,1))
+                        x0_mean[-1] = -1.0
+                        x0_cov = 0.2*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.5*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
@@ -201,11 +209,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.2*np.eye(ny) #observation noise covariance
-                        mu_v = 0.0*np.ones((ny, 1))
+                        M = 1.5*np.eye(ny) #observation noise covariance
+                        mu_v = 0.5*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -0.5*np.ones(ny)
-                        v_max = 0.5*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
+                        v_max = 1.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
@@ -282,7 +290,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                            print("Simulation #",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     #----------------------------
                     print("Running DRLQC Forward step ...")
                     for i in range(num_sim):
@@ -291,7 +299,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_drlqc = drlqc.forward()
                         output_drlqc_list.append(output_drlqc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
+                            print("Simulation #",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -302,7 +310,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                            print("Simulation #",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     #----------------------------
                     np.random.seed(seed) # fix Random seed!
@@ -313,7 +321,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
                         if i%50==0:
-                            print("Iteration ",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                            print("Simulation #",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
                     
                     # -------------------------
@@ -452,9 +460,9 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
+    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
-    parser.add_argument('--horizon', required=False, default=30, type=int) #horizon length
+    parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
     parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
