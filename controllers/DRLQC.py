@@ -39,13 +39,12 @@ class DRLQC:
         self.Q_big = np.zeros((n, n, T + 1))
         self.R_big = np.zeros((m, m, T))
         for i in range(T):
-            temp = np.ones((n, n))
-            self.A_big[:, :, i] = 0.1*(np.eye(n) + np.triu(temp, 1) - np.triu(temp, 2))
-            self.B_big[:, :, i] = np.eye(m)
-            self.C_big[:, :, i] = np.eye(p)
-            self.R_big[:, :, i] = np.eye(m)
-            self.Q_big[:, :, i] = np.eye(n)
-        self.Q_big[:, :, T] = np.eye(n)
+            self.A_big[:, :, i] = self.A
+            self.B_big[:, :, i] = self.B
+            self.C_big[:, :, i] = self.C
+            self.R_big[:, :, i] = self.R
+            self.Q_big[:, :, i] = self.Q
+        self.Q_big[:, :, T] = self.Qf
         self.P_ = calculate_P(A=self.A_big, B=self.B_big, Q=self.Q_big, R=self.R_big, T=self.T)
         
         self.v_mean_hat = v_mean_hat
@@ -329,7 +328,7 @@ class DRLQC:
         
         self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
         #Collect Estimation MSE 
-        for t in range(self.T):
+        for t in range(self.T-1):
             self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
             
         #Compute the total cost
@@ -337,8 +336,6 @@ class DRLQC:
         for t in range(self.T-1, -1, -1):
             J[t] = J[t+1] + x[t].T @ self.Q @ x[t] + u[t].T @ self.R @ u[t]
 
-        
-        
         end = time.time()
         time_ = end-start
         return {'comp_time': time_,
