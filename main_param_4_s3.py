@@ -446,10 +446,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     else:
                         save_data(path + 'drcmmse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCMMSE_mean)
                         save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
-                        save_data(path + 'wdrc' + theta_v_ + '.pkl', J_WDRC_mean)
+                        save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         save_data(path + 'drcmmse_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_mean)
                         save_data(path + 'drce_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_mean)
-                        save_data(path + 'wdrc_mse' + theta_v_ + '.pkl', J_MSE_WDRC_mean)
+                        save_data(path + 'wdrc_mse' + theta_w_ + '.pkl', J_MSE_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
                     save_data(path + 'lqg_mse.pkl', J_MSE_LQG_mean)

@@ -124,7 +124,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
+    theta_v_list = [5.0, 10.0, 15.0] # radius of noise ambiguity set
     #theta_v_list = [1.0, 2.0, 4.0, 6.0, 10.0] # radius of noise ambiguity set
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
     lambda_list = [10, 20, 30, 40, 50] # disturbance distribution penalty parameter
@@ -167,7 +167,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 1.0*np.ones((nx, 1))
+                        mu_w = 0.0*np.ones((nx, 1))
                         Sigma_w= 1.0*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
@@ -202,7 +202,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         v_max = None
                         v_min = None
                         M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = -2.0*np.ones((ny, 1))
+                        mu_v = 0.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -5.0*np.ones(ny)
                         v_max = 0.0*np.ones(ny)
@@ -364,7 +364,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     else:
                         save_data(path + 'drlqc' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRLQC_mean)
                         save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
-                        save_data(path + 'wdrc' + theta_v_ + '.pkl', J_WDRC_mean)
+                        save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
             
@@ -392,9 +392,9 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
-    parser.add_argument('--horizon', required=False, default=30, type=int) #horizon length
+    parser.add_argument('--num_samples', required=False, default=10, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=10, type=int) #number of noise samples
+    parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     
