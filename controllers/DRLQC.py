@@ -106,7 +106,7 @@ class DRLQC:
         R=self.R_big,
         T=self.T,
         P=self.P_,
-        X0_hat=self.x0_cov,
+        X0_hat=self.x0_cov_hat,
         V_hat=self.V_hat,
         W_hat=self.W_hat,
         rho_w=self.rho_w,
@@ -265,6 +265,7 @@ class DRLQC:
         
         self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
         self.x_cov[0] = self.kalman_filter_cov(self.V_opt[:,:,0], self.X0_opt)
+        #print("x0_opt : ", self.X0_opt)
         for t in range(self.T):
             self.x_cov[t+1] = self.kalman_filter_cov(self.V_opt[:,:,t+1], self.x_cov[t], self.W_opt[:,:,t])  
         
@@ -327,10 +328,12 @@ class DRLQC:
         
         
         self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
+        #print("x[0] :", x[0])
+        #print("x_mean[0] : ", x_mean[0])
         #Collect Estimation MSE 
         for t in range(self.T-1):
             self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])
-            
+        #print(self.J_mse)
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
         for t in range(self.T-1, -1, -1):

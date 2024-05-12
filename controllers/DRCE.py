@@ -431,6 +431,7 @@ class DRCE:
         self.sigma_wc = np.zeros((self.T, self.nx, self.nx))
         #print(self.v_mean_hat[0])
         self.x_cov[0], self.S_xx[0], self.S_xy[0], self.S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
+        #print("x_cov[0] : ", self.x_cov[0])
         for t in range(self.T):
             print("DRCE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
