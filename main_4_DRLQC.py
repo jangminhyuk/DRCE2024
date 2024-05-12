@@ -283,8 +283,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller  
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
-                    
-                        print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     #----------------------------
                     print("Running DRLQC Forward step ...")
                     for i in range(num_sim):
@@ -292,8 +292,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_drlqc = drlqc.forward()
                         output_drlqc_list.append(output_drlqc)
-                    
-                        print('cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -303,7 +303,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
-                        print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     #----------------------------
                     np.random.seed(seed) # fix Random seed!
@@ -313,7 +314,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
-                        print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
                     
                     # -------------------------

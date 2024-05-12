@@ -14,6 +14,7 @@ from controllers.inf_DRCE import inf_DRCE
 import os
 import pickle
 import control
+import scipy
 
 def uniform(a, b, N=1):
     n = a.shape[0]
@@ -117,17 +118,61 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
     #-------Initialization-------
-    nx = 10 #state dimension
-    nu = 10 #control input dimension
-    ny = 10#output dimension
-    temp = np.ones((nx, nx))
-    A = 0.1*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
-    B = Q = R = Qf = np.eye(10)
-    C = np.eye(10)
-    #C = np.hstack([np.eye(9), np.zeros((9,1))])
+    nx = 21
+    nu = 11
+    ny = 10
+    A = np.array([[-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,  0,	0,	0],
+                    [0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	-1,	0,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1]
+                    ])
+    B = np.array([[1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	1,	0,  0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
+                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1]])
+    C = np.zeros((10,21))
+    C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17]=C[9][19]= 1
+    Q = Qf = np.eye(21)
+    R = np.eye(11) 
+    print("Controllability matrix rank : ",  np.linalg.matrix_rank(control.ctrb(A, B)))
+    print("Observability matrix rank : ",  np.linalg.matrix_rank(control.obsv(A, C)))
     #----------------------------
     # change True to False if you don't want to use given lambda
-    use_lambda = True
+    use_lambda = False
     lambda_ = 15 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
@@ -243,7 +288,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         W_hat[:,:,i] = Sigma_hat[i]
                         V_hat[:,:,i] = M_hat[i]
                     # ----------------------------
-                    print(V_hat.shape)
                     
                     #-------Create a random system-------
                     system_data = (A, B, C, Q, Qf, R, M)
@@ -283,8 +327,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller  
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
-                    
-                        print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     #----------------------------
                     print("Running DRLQC Forward step ...")
                     for i in range(num_sim):
@@ -292,8 +336,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_drlqc = drlqc.forward()
                         output_drlqc_list.append(output_drlqc)
-                    
-                        print('cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (DRLQC):', output_drlqc['cost'][0], 'time (DRLQC):', output_drlqc['comp_time'])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -303,7 +347,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
-                        print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     #----------------------------
                     np.random.seed(seed) # fix Random seed!
@@ -313,7 +358,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         #Perform state estimation and apply the controller
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
-                        print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                        if i%50==0:
+                            print("Iteration ",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                     
                     
                     # -------------------------
@@ -343,52 +389,52 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     print("DRCE Offline Computation time : ", output_drce['offline_time'])
                     print("DRLQC Offline Computation time : ", output_drlqc['offline_time'])
                     
+                    J_LQG_list, J_WDRC_list, J_DRCE_list, J_DRLQC_list= [], [], [], []
+                        
+                    #lqg-----------------------
+                    for out in output_lqg_list:
+                        J_LQG_list.append(out['cost'])
+                        
+                    J_LQG_mean= np.mean(J_LQG_list, axis=0)
+                    J_LQG_std = np.std(J_LQG_list, axis=0)
+                    output_J_LQG_mean.append(J_LQG_mean[0])
+                    output_J_LQG_std.append(J_LQG_std[0])
+                    print(" Average cost (LQG) : ", J_LQG_mean[0])
+                    print(" std (LQG) : ", J_LQG_std[0])
+                    
+                    #wdrc-----------------------
+                    for out in output_wdrc_list:
+                        J_WDRC_list.append(out['cost'])
+                        
+                    J_WDRC_mean= np.mean(J_WDRC_list, axis=0)
+                    J_WDRC_std = np.std(J_WDRC_list, axis=0)
+                    output_J_WDRC_mean.append(J_WDRC_mean[0])
+                    output_J_WDRC_std.append(J_WDRC_std[0])
+                    print(" Average cost (WDRC) : ", J_WDRC_mean[0])
+                    print(" std (WDRC) : ", J_WDRC_std[0])
+                    
+                    #drce---------------------
+                    for out in output_drce_list:
+                        J_DRCE_list.append(out['cost'])
+                        
+                    J_DRCE_mean= np.mean(J_DRCE_list, axis=0)
+                    J_DRCE_std = np.std(J_DRCE_list, axis=0)
+                    output_J_DRCE_mean.append(J_DRCE_mean[0])
+                    output_J_DRCE_std.append(J_DRCE_std[0])
+                    print(" Average cost (DRCE) : ", J_DRCE_mean[0])
+                    print(" std (DRCE) : ", J_DRCE_std[0])
+                    
+                    #drlqc---------------------
+                    for out in output_drlqc_list:
+                        J_DRLQC_list.append(out['cost'])
+                        
+                    J_DRLQC_mean= np.mean(J_DRLQC_list, axis=0)
+                    J_DRLQC_std = np.std(J_DRLQC_list, axis=0)
+                    output_J_DRLQC_mean.append(J_DRLQC_mean[0])
+                    output_J_DRLQC_std.append(J_DRLQC_std[0])
+                    print(" Average cost (DRLQC) : ", J_DRLQC_mean[0])
+                    print(" std (DRLQC) : ", J_DRLQC_std[0])
                     if noise_plot_results:
-                        J_LQG_list, J_WDRC_list, J_DRCE_list, J_DRLQC_list= [], [], [], []
-                        
-                        #lqg-----------------------
-                        for out in output_lqg_list:
-                            J_LQG_list.append(out['cost'])
-                            
-                        J_LQG_mean= np.mean(J_LQG_list, axis=0)
-                        J_LQG_std = np.std(J_LQG_list, axis=0)
-                        output_J_LQG_mean.append(J_LQG_mean[0])
-                        output_J_LQG_std.append(J_LQG_std[0])
-                        print(" Average cost (LQG) : ", J_LQG_mean[0])
-                        print(" std (LQG) : ", J_LQG_std[0])
-                        
-                        #wdrc-----------------------
-                        for out in output_wdrc_list:
-                            J_WDRC_list.append(out['cost'])
-                            
-                        J_WDRC_mean= np.mean(J_WDRC_list, axis=0)
-                        J_WDRC_std = np.std(J_WDRC_list, axis=0)
-                        output_J_WDRC_mean.append(J_WDRC_mean[0])
-                        output_J_WDRC_std.append(J_WDRC_std[0])
-                        print(" Average cost (WDRC) : ", J_WDRC_mean[0])
-                        print(" std (WDRC) : ", J_WDRC_std[0])
-                        
-                        #drce---------------------
-                        for out in output_drce_list:
-                            J_DRCE_list.append(out['cost'])
-                            
-                        J_DRCE_mean= np.mean(J_DRCE_list, axis=0)
-                        J_DRCE_std = np.std(J_DRCE_list, axis=0)
-                        output_J_DRCE_mean.append(J_DRCE_mean[0])
-                        output_J_DRCE_std.append(J_DRCE_std[0])
-                        print(" Average cost (DRCE) : ", J_DRCE_mean[0])
-                        print(" std (DRCE) : ", J_DRCE_std[0])
-                        
-                        #drlqc---------------------
-                        for out in output_drlqc_list:
-                            J_DRLQC_list.append(out['cost'])
-                            
-                        J_DRLQC_mean= np.mean(J_DRLQC_list, axis=0)
-                        J_DRLQC_std = np.std(J_DRLQC_list, axis=0)
-                        output_J_DRLQC_mean.append(J_DRLQC_mean[0])
-                        output_J_DRLQC_std.append(J_DRLQC_std[0])
-                        print(" Average cost (DRLQC) : ", J_DRLQC_mean[0])
-                        print(" std (DRLQC) : ", J_DRLQC_std[0])
                         
                         print("num_noise_sample : ", num_noise, " / finished with dist : ", dist, "/ noise_dist : ", noise_dist, "/ seed : ", seed)
                     else:
@@ -398,6 +444,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                             path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
                         if not os.path.exists(path):
                             os.makedirs(path)
+                        
                         save_data(path + 'drlqc.pkl', output_drlqc_list)
                         save_data(path + 'drce.pkl', output_drce_list)
                         save_data(path + 'wdrc.pkl', output_wdrc_list)
