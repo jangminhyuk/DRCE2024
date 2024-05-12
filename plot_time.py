@@ -7,28 +7,38 @@ import matplotlib.pyplot as plt
 import argparse
 import pickle
 
-def summarize_noise( avg_time_drlqc, std_time_drlqc, avg_time_wdrc, std_time_wdrc, avg_time_drce, std_time_drce, dist, noise_dist, infinite, path):
+def summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01, avg_time_drce, std_time_drce, dist, noise_dist, infinite, path):
 
     #horizon_list
     t = np.array([10,20,30,40,50,60,70,80,90,100,200,300,400])
     
-    drlqc_avgT = np.array(avg_time_drlqc[0:])
-    wdrc_avgT = np.array(avg_time_wdrc[0:])
-    drce_avgT = np.array(avg_time_drce[0:])
+    drlqc_0_0001_avgT = np.array(avg_time_drlqc_0_0001[0:])
+    drlqc_0_0001_stdT = np.array(std_time_drlqc_0_0001[0:])
     
-    drlqc_stdT = np.array(std_time_drlqc[0:])
-    wdrc_stdT = np.array(std_time_wdrc[0:])
+    drlqc_0_001_avgT = np.array(avg_time_drlqc_0_001[0:])
+    drlqc_0_001_stdT = np.array(std_time_drlqc_0_001[0:])
+    
+    drlqc_0_01_avgT = np.array(avg_time_drlqc_0_01[0:])
+    drlqc_0_01_stdT = np.array(std_time_drlqc_0_01[0:])
+    
+    drce_avgT = np.array(avg_time_drce[0:])
     drce_stdT = np.array(std_time_drce[0:])
     
     
     fig= plt.figure(figsize=(6,4), dpi=300)
     
     #----------------------------------------------
-    plt.plot(t[:5], drlqc_avgT, color='dimgrey', label='DRLQC')
-    plt.fill_between(t[:5], drlqc_avgT + 2*drlqc_stdT, drlqc_avgT - 2*drlqc_stdT, facecolor='grey', alpha=0.3)
+    plt.plot(t[:4], drlqc_0_0001_avgT, color='dimgrey', label='DRLQC (1e-4)',linestyle=':')
+    plt.fill_between(t[:4], drlqc_0_0001_avgT + 2*drlqc_0_0001_stdT, drlqc_0_0001_avgT - 2*drlqc_0_0001_stdT, facecolor='grey', alpha=0.3)
     
-    # plt.plot(t, wdrc_avgT, color='tab:blue', label='WDRC')
-    # plt.fill_between(t, wdrc_avgT + 2*wdrc_stdT, wdrc_avgT - 2*wdrc_stdT, facecolor='tab:blue', alpha=0.3)
+    #----------------------------------------------
+    plt.plot(t[:5], drlqc_0_001_avgT, color='dimgrey', label='DRLQC (1e-3)')
+    plt.fill_between(t[:5], drlqc_0_001_avgT + 2*drlqc_0_001_stdT, drlqc_0_001_avgT - 2*drlqc_0_001_stdT, facecolor='grey', alpha=0.3)
+    
+    #----------------------------------------------
+    plt.plot(t[:5], drlqc_0_01_avgT, color='dimgrey', label='DRLQC (1e-2)',linestyle='--')
+    plt.fill_between(t[:5], drlqc_0_01_avgT + 2*drlqc_0_01_stdT, drlqc_0_01_avgT - 2*drlqc_0_01_stdT, facecolor='grey', alpha=0.3)
+
     
     plt.plot(t, drce_avgT,  color='tab:green', label='WDR-CE')
     plt.fill_between(t, drce_avgT + 2*drce_stdT, drce_avgT - 2*drce_stdT, facecolor='tab:green', alpha=0.3)
@@ -65,28 +75,32 @@ if __name__ == "__main__":
     
     
     
-    avg_time_wdrc_file = open(path + '/wdrc_avgT.pkl', 'rb' )
-    avg_time_wdrc = pickle.load(avg_time_wdrc_file)
-    #print(avg_time_wdrc)
-    avg_time_wdrc_file.close()
-    std_time_wdrc_file = open(path + '/wdrc_stdT.pkl', 'rb' )
-    std_time_wdrc = pickle.load(std_time_wdrc_file)
-    std_time_wdrc_file.close()
-    
     avg_time_drce_file = open(path + '/drce_avgT.pkl', 'rb' )
     avg_time_drce = pickle.load(avg_time_drce_file)
-    #print(avg_time_drkf_wdrc)
     avg_time_drce_file.close()
     std_time_drce_file = open(path + '/drce_stdT.pkl', 'rb' )
     std_time_drce = pickle.load(std_time_drce_file)
     std_time_drce_file.close()
     
-    avg_time_drlqc_file = open(path + '/drlqc_avgT.pkl', 'rb' )
-    avg_time_drlqc = pickle.load(avg_time_drlqc_file)
-    #print(avg_time_drkf_wdrc)
-    avg_time_drlqc_file.close()
-    std_time_drlqc_file = open(path + '/drlqc_stdT.pkl', 'rb' )
-    std_time_drlqc = pickle.load(std_time_drlqc_file)
-    std_time_drlqc_file.close()
+    avg_time_drlqc_0_0001_file = open(path + '/drlqc_0_0001_avgT.pkl', 'rb' )
+    avg_time_drlqc_0_0001 = pickle.load(avg_time_drlqc_0_0001_file)
+    avg_time_drlqc_0_0001_file.close()
+    std_time_drlqc_0_0001_file = open(path + '/drlqc_0_0001_stdT.pkl', 'rb' )
+    std_time_drlqc_0_0001 = pickle.load(std_time_drlqc_0_0001_file)
+    std_time_drlqc_0_0001_file.close()
     
-    summarize_noise(avg_time_drlqc, std_time_drlqc, avg_time_wdrc, std_time_wdrc, avg_time_drce, std_time_drce, args.dist, args.noise_dist, args.infinite ,path)
+    avg_time_drlqc_0_001_file = open(path + '/drlqc_0_001_avgT.pkl', 'rb' )
+    avg_time_drlqc_0_001 = pickle.load(avg_time_drlqc_0_001_file)
+    avg_time_drlqc_0_001_file.close()
+    std_time_drlqc_0_001_file = open(path + '/drlqc_0_001_stdT.pkl', 'rb' )
+    std_time_drlqc_0_001 = pickle.load(std_time_drlqc_0_001_file)
+    std_time_drlqc_0_001_file.close()
+    
+    avg_time_drlqc_0_01_file = open(path + '/drlqc_0_01_avgT.pkl', 'rb' )
+    avg_time_drlqc_0_01 = pickle.load(avg_time_drlqc_0_01_file)
+    avg_time_drlqc_0_01_file.close()
+    std_time_drlqc_0_01_file = open(path + '/drlqc_0_01_stdT.pkl', 'rb' )
+    std_time_drlqc_0_01 = pickle.load(std_time_drlqc_0_01_file)
+    std_time_drlqc_0_01_file.close()
+    
+    summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01,  avg_time_drce, std_time_drce, args.dist, args.noise_dist, args.infinite ,path)

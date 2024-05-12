@@ -250,10 +250,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 #Initialize controllers
                 
                 drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                drlqc_0_0001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-4)
-                drlqc_0_001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-3)
-                drlqc_0_01 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-2)
-                
+                if T<=60:
+                    drlqc_0_0001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-4)
+                    drlqc_0_001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-3)
+                    drlqc_0_01 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-2)
+                    
                 # --- DRLQC 1e-4 --- #
                 if T<=40: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
                     start = time.time()
@@ -273,7 +274,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     drlqc_0_001_time_list.append(end-start)
                 
                 # --- DRLQC 1e-2 --- #
-                if T<=50: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
+                if T<=60: # Since DRLQC took over 100s for this system when horizon T > 60, we will not plot it.
                     start = time.time()
                     drlqc_0_01.solve_sdp()
                     drlqc_0_01.backward()
