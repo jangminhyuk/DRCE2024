@@ -132,9 +132,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [2.0]
-        theta_v_list = [2.0]
-        theta_x0 = 2.0 # radius of initial state ambiguity set
+        theta_w_list = [1.0]
+        theta_v_list = [1.0]
+        theta_x0 = 1.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
         theta_v_list = [2.0]
@@ -147,17 +147,19 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     horizon_list = [10,20,30,40,50,60,70,80,90,100,200,300,400]
     
     # Save offline computation time for each method
-    lqg_time_avg = []
-    wdrc_time_avg = []
     drce_time_avg = []
-    drlqc_time_avg = []
-    lqg_time_std = []
-    wdrc_time_std = []
+    drlqc_0_0001_time_avg = []
+    drlqc_0_001_time_avg = []
+    drlqc_0_01_time_avg = []
+    
     drce_time_std = []
-    drlqc_time_std = []
+    drlqc_0_0001_time_std = []
+    drlqc_0_001_time_std = []
+    drlqc_0_01_time_std = []
+    
     for noise_dist in noisedist:
         for T in horizon_list:
-            lqg_time_list, wdrc_time_list, drce_time_list, drlqc_time_list=[], [], [], []
+            drce_time_list, drlqc_0_0001_time_list,drlqc_0_001_time_list,drlqc_0_01_time_list=[], [], [], []
             for idx in range(10):
                 num_noise = num_noise_list[0]
                 theta_w = theta_w_list[0]
@@ -197,17 +199,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     x0_min = -0.5*np.ones(nx)
                     x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                     x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
-                elif dist =="uniform":
-                    #disturbance distribution parameters
-                    w_max = 0.3*np.ones(nx)
-                    w_min = -0.2*np.ones(nx)
-                    mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
-                    Sigma_w = 1/12*np.diag((w_max - w_min)**2)
-                    #initial state distribution parameters
-                    x0_max = 0.1*np.ones(nx)
-                    x0_min = -0.1*np.ones(nx)
-                    x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
-                    x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                     
                 #-------Noise distribution ---------#
                 if noise_dist =="normal":
@@ -220,11 +211,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     v_max = 1.0*np.ones(ny)
                     mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                     M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
-                elif noise_dist == "uniform":
-                    v_min = -1.0*np.ones(ny)
-                    v_max = 2.0*np.ones(ny)
-                    mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                    M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
                     
                     
                 #-------Estimate the nominal distribution-------
@@ -262,26 +248,38 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 
                 
                 #Initialize controllers
-                if infinite:
-                    drce = inf_DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
-                    lqg = inf_LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat, x0_cov_hat)
-                    wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
-                    
-                else:
-                    wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                    drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                    drlqc = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol)
-                    lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
                 
-                # --- DRLQC --- #
+                drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                drlqc_0_0001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-4)
+                drlqc_0_001 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-3)
+                drlqc_0_01 = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol=1e-2)
                 
+                # --- DRLQC 1e-4 --- #
+                if T<=40: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
+                    start = time.time()
+                    drlqc_0_0001.solve_sdp()
+                    drlqc_0_0001.backward()
+                    end = time.time()
+                    print("DRLQC 1e-4 Offline Computation time : ", end-start)
+                    drlqc_0_0001_time_list.append(end-start)
+                
+                # --- DRLQC 1e-3 --- #
                 if T<=50: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
                     start = time.time()
-                    drlqc.solve_sdp()
-                    drlqc.backward()
+                    drlqc_0_001.solve_sdp()
+                    drlqc_0_001.backward()
                     end = time.time()
-                    print("DRLQC Offline Computation time : ", end-start)
-                    drlqc_time_list.append(end-start)
+                    print("DRLQC 1e-3 Offline Computation time : ", end-start)
+                    drlqc_0_001_time_list.append(end-start)
+                
+                # --- DRLQC 1e-2 --- #
+                if T<=50: # Since DRLQC took over 100s for this system when horizon T > 50, we will not plot it.
+                    start = time.time()
+                    drlqc_0_01.solve_sdp()
+                    drlqc_0_01.backward()
+                    end = time.time()
+                    print("DRLQC 1e-2 Offline Computation time : ", end-start)
+                    drlqc_0_01_time_list.append(end-start)
                 
                 # --- DRCE --- #
                 start = time.time()
@@ -290,13 +288,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 print("DRCE Offline Computation time : ", end-start)
                 drce_time_list.append(end-start)
                 
-                # --- WDRC --- #
-                start = time.time()
-                wdrc.backward()
-                end = time.time()
-                print("WDRC Offline Computation time : ", end-start)
-                wdrc_time_list.append(end-start)
-                    
                 
             if infinite:
                 path = "./results/{}_{}/infinite/multiple/DRLQC/".format(dist, noise_dist)
@@ -305,23 +296,33 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             if not os.path.exists(path):
                 os.makedirs(path)
             
-            wdrc_time_avg.append(np.mean(wdrc_time_list))
             drce_time_avg.append(np.mean(drce_time_list))
-            
-            wdrc_time_std.append(np.std(wdrc_time_list))
             drce_time_std.append(np.std(drce_time_list))
-            if T<=50:
-                drlqc_time_std.append(np.std(drlqc_time_list))
-                drlqc_time_avg.append(np.mean(drlqc_time_list))
+            
+            if T<=40:
+                drlqc_0_0001_time_std.append(np.std(drlqc_0_0001_time_list))
+                drlqc_0_0001_time_avg.append(np.mean(drlqc_0_0001_time_list))
+                drlqc_0_001_time_std.append(np.std(drlqc_0_001_time_list))
+                drlqc_0_001_time_avg.append(np.mean(drlqc_0_001_time_list))
+                drlqc_0_01_time_std.append(np.std(drlqc_0_01_time_list))
+                drlqc_0_01_time_avg.append(np.mean(drlqc_0_01_time_list))
+            if T==50:
+                drlqc_0_001_time_std.append(np.std(drlqc_0_001_time_list))
+                drlqc_0_001_time_avg.append(np.mean(drlqc_0_001_time_list))
+                drlqc_0_01_time_std.append(np.std(drlqc_0_01_time_list))
+                drlqc_0_01_time_avg.append(np.mean(drlqc_0_01_time_list))
             
             print("Average offline computation time: For Time horizon 10 ~ ",T)
-            print("WDRC (avg): ", wdrc_time_avg)
             print("DRCE (avg): ", drce_time_avg)
-            print("DRLQC (avg): ", drlqc_time_avg)
+            print("DRLQC 1e-4 (avg): ", drlqc_0_0001_time_avg)
+            print("DRLQC 1e-3 (avg): ", drlqc_0_001_time_avg)
+            print("DRLQC 1e-2 (avg): ", drlqc_0_01_time_avg)
+            
             print("Standard Deviation")
-            print("WDRC (std): ", wdrc_time_std)
             print("DRCE (std): ", drce_time_std)
-            print("DRLQC (std): ", drlqc_time_std)
+            print("DRLQC 1e-4 (std): ", drlqc_0_0001_time_std)
+            print("DRLQC 1e-3 (std): ", drlqc_0_001_time_std)
+            print("DRLQC 1e-2 (std): ", drlqc_0_01_time_std)
             
         if infinite:
             path = "./results/{}_{}/infinite/multiple/DRLQC/".format(dist, noise_dist)
@@ -329,24 +330,23 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
         if not os.path.exists(path):
             os.makedirs(path)    
-        save_data(path + 'drlqc_avgT.pkl', drlqc_time_avg)
+        save_data(path + 'drlqc_0_0001_avgT.pkl', drlqc_0_0001_time_avg)
+        save_data(path + 'drlqc_0_001_avgT.pkl', drlqc_0_001_time_avg)
+        save_data(path + 'drlqc_0_01_avgT.pkl', drlqc_0_01_time_avg)
         save_data(path + 'drce_avgT.pkl', drce_time_avg)
-        save_data(path + 'wdrc_avgT.pkl', wdrc_time_avg)
         
-        save_data(path + 'drlqc_stdT.pkl', drlqc_time_std)
+        
+        save_data(path + 'drlqc_0_0001_stdT.pkl', drlqc_0_0001_time_std)
+        save_data(path + 'drlqc_0_001_stdT.pkl', drlqc_0_001_time_std)
+        save_data(path + 'drlqc_0_01_stdT.pkl', drlqc_0_01_time_std)
         save_data(path + 'drce_stdT.pkl', drce_time_std)
-        save_data(path + 'wdrc_stdT.pkl', wdrc_time_std)
             
         print('\n-------Summary-------')
         print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
                     
-            # after running 10 repeated calcuatoin for this time T
-            
                     
     print("Time Data generation Completed!!")
-    
-    print("For plot : Use python plot_time.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
