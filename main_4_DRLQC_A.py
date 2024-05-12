@@ -112,7 +112,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
     else:
         num_noise_list = [num_noise_samples]
-    num_x0_samples = 15 # num x0 samples 
+    num_x0_samples = 20 # num x0 samples 
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean=[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
@@ -121,22 +121,22 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     nu = 10 #control input dimension
     ny = 10#output dimension
     temp = np.ones((nx, nx))
-    A = 0.9*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
+    A = 0.2*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10)
     C = np.eye(10)
     #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     # change True to False if you don't want to use given lambda
     use_lambda = True
-    lambda_ = 15 # will not be used if the parameter "use_lambda = False"
+    lambda_ = 3.5 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
-        theta_w_list = [1.0]
-        theta_v_list = [1.0]
-        theta_x0 = 1.0 # radius of initial state ambiguity set
+        theta_w_list = [2.0]
+        theta_v_list = [2.0]
+        theta_x0 = 2.0 # radius of initial state ambiguity set
     elif dist == "quadratic":
         theta_w_list = [1.0]
         theta_v_list = [2.0]
@@ -168,7 +168,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         w_max = None
                         w_min = None
                         mu_w = 0.0*np.ones((nx, 1))
-                        Sigma_w= 0.1*np.eye(nx)
+                        Sigma_w= 0.5*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -201,7 +201,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 0.1*np.eye(ny) #observation noise covariance
+                        M = 1.0*np.eye(ny) #observation noise covariance
                         mu_v = 0.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
                         v_min = -0.5*np.ones(ny)
@@ -452,8 +452,8 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
+    parser.add_argument('--num_samples', required=False, default=20, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=20, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
