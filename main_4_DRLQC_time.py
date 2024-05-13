@@ -312,6 +312,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 drlqc_0_001_time_avg.append(np.mean(drlqc_0_001_time_list))
                 drlqc_0_01_time_std.append(np.std(drlqc_0_01_time_list))
                 drlqc_0_01_time_avg.append(np.mean(drlqc_0_01_time_list))
+            if T==60:
+                drlqc_0_01_time_std.append(np.std(drlqc_0_01_time_list))
+                drlqc_0_01_time_avg.append(np.mean(drlqc_0_01_time_list))
             
             print("Average offline computation time: For Time horizon 10 ~ ",T)
             print("DRCE (avg): ", drce_time_avg)
