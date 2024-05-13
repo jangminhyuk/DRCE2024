@@ -125,8 +125,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     theta_v_list = [5.0, 10.0, 15.0] # radius of noise ambiguity set
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
-    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
+    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
+    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     lambda_list = [10, 20, 30, 40, 50] # disturbance distribution penalty parameter
     #theta_v_list = [4.0]
     #lambda_list = [6]
@@ -167,7 +167,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.0*np.ones((nx, 1))
+                        mu_w = 2.0*np.ones((nx, 1))
                         Sigma_w= 0.5*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
@@ -176,13 +176,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 1.0*np.ones(nx)
-                        w_min = -1.0*np.ones(nx)
+                        w_max = 4.0*np.ones(nx)
+                        w_min = 2.0*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 1.0*np.ones(nx)
-                        x0_min = 0.0*np.ones(nx)
+                        x0_max = 1.2*np.ones(nx)
+                        x0_min = 0.8*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
                     elif dist =="uniform":
@@ -201,11 +201,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.5*np.eye(ny) #observation noise covariance
-                        mu_v = 0.0*np.ones((ny, 1))
+                        M = 1.5*np.eye(ny) #observation noise covariance
+                        mu_v = 2.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = 0.0*np.ones(ny)
-                        v_max = 3.0*np.ones(ny)
+                        v_min = 1.5*np.ones(ny)
+                        v_max = 4.5*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
