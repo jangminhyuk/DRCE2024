@@ -10,6 +10,7 @@ import re
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
 import matplotlib.ticker as ticker
+from matplotlib import cm
 from scipy.interpolate import interp1d
 
 def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdrc_lambda_values, wdrc_theta_v_values, wdrc_cost_values , drce_lambda_values, drce_theta_v_values, drce_cost_values, drlqc_lambda_values, drlqc_theta_v_values, drlqc_cost_values,  dist, noise_dist, infinite, use_lambda, path):
@@ -122,7 +123,10 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     })
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
-    
+     # Collect all cost values to determine z-limits
+    all_cost_values = np.concatenate([lqg_cost_values, wdrc_cost_values, drce_cost_values, drlqc_cost_values])
+    z_min = 0.999 * np.min(all_cost_values)
+    z_max = 1.001 * np.max(all_cost_values)
     # -------------------
     # LQG
     # Interpolate cost values for smooth surface - LQG
@@ -175,7 +179,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     )
     
     # Plot smooth surface - DCE
-    surface_drlqc = ax.plot_surface(theta_w_grid_drlqc, theta_v_grid_drlqc, cost_grid_drlqc, alpha=0.6, color='gold', label='DRLQC')
+    surface_drlqc = ax.plot_surface(theta_w_grid_drlqc, theta_v_grid_drlqc, cost_grid_drlqc, alpha=0.6, color='gold', label='DRLQC', antialiased=False)
     surfaces.append(surface_drlqc)
     labels.append('DRLQC')
     
@@ -194,7 +198,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     )
     
     # Plot smooth surface - DCE
-    surface_drce = ax.plot_surface(theta_w_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.5, color='green', label='WDR-CE')
+    surface_drce = ax.plot_surface(theta_w_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.5, color='green', label='WDR-CE', antialiased=False)
     surfaces.append(surface_drce)
     labels.append('WDR-CE')
     
@@ -205,8 +209,10 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     ax.set_xlabel(r'$\theta_w$', fontsize=16)
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
     ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
+    # Set z-axis limits
+    ax.set_zlim(z_min, z_max)
     
-    ax.view_init(elev=20, azim=-65)
+    ax.view_init(elev=14, azim=35)
     
     plt.show()
     fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
