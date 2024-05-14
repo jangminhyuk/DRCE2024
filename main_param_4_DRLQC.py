@@ -168,7 +168,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         w_max = None
                         w_min = None
                         mu_w = 1.0*np.ones((nx, 1))
-                        Sigma_w= 0.5*np.eye(nx)
+                        Sigma_w= 0.3*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
@@ -202,10 +202,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         v_max = None
                         v_min = None
                         M = 1.5*np.eye(ny) #observation noise covariance
-                        mu_v = 0.0*np.ones((ny, 1))
+                        mu_v = 1.0*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -1.5*np.ones(ny)
-                        v_max = 1.5*np.ones(ny)
+                        v_min = -0.5*np.ones(ny)
+                        v_max = 2.5*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
