@@ -163,7 +163,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.7, color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.6, color='blue', label='WDRC')
     surfaces.append(surface_wdrc)
     labels.append('WDRC')
     #--------------
@@ -267,11 +267,11 @@ if __name__ == "__main__":
     
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0]
-        theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     else:
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
         
     # Regular expression pattern to extract numbers from file names
