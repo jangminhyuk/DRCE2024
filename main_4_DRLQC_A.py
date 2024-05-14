@@ -127,7 +127,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     # change True to False if you don't want to use given lambda
-    use_lambda = True
+    use_lambda = False
     lambda_ = 5 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
