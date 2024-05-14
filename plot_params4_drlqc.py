@@ -267,8 +267,8 @@ if __name__ == "__main__":
     
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-        theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0]
+        theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     else:
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
         theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
