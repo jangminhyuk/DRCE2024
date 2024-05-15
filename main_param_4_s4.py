@@ -111,56 +111,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean =[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
-    nx = 21
-    nu = 11
-    ny = 10
-    A = np.array([[-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,  0,	0,	0],
-                    [0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	-1,	0,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,  0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1,	0,	0],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	-1],
-                    [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	-1]
-                    ])
-    B = np.array([[1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	1,	0,  0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
-                [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1]])
-    C = np.zeros((10,21))
-    C[0][1]=C[1][3]=C[2][5]=C[3][7]=C[4][9]=C[5][11]=C[6][13]=C[7][15]=C[8][17]=C[9][19]= 1
-    Q = Qf = np.eye(21)
-    R = np.eye(11) 
+    nx = 10 #state dimension
+    nu = 10 #control input dimension
+    ny = 10#output dimension
+    temp = np.ones((nx, nx))
+    A = 0.2*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
+    B = Q = R = Qf = np.eye(10)
+    C = np.eye(10)
+    #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
@@ -168,12 +126,12 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     
     if dist=='normal':
-        lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+        lambda_list = [5, 10, 15, 20, 25, 30] # disturbance distribution penalty parameter
     else:
         lambda_list = [20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     if dist=='normal':
         num_samples=num_noise_samples=15
-        num_x0_samples=10
+        num_x0_samples=15
     else:
         num_samples=num_noise_samples=num_x0_samples=20
     num_noise_list = [num_noise_samples]
@@ -318,8 +276,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         
                     print('---------------------')
                     
-
-                    
                     #----------------------------
                     print("Running DRCE Forward step ...")
                     for i in range(num_sim):
@@ -328,7 +284,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
                     
-                        print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
+                        #print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     
                     J_DRCE_list = []
                     for out in output_drce_list:
@@ -348,7 +304,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_drcmmse = drcmmse.forward()
                         output_drcmmse_list.append(output_drcmmse)
                     
-                        print('cost (DRCMMSE):', output_drcmmse['cost'][0], 'time (DRCMMSE):', output_drcmmse['comp_time'])
+                        #print('cost (DRCMMSE):', output_drcmmse['cost'][0], 'time (DRCMMSE):', output_drcmmse['comp_time'])
                     
                     J_DRCMMSE_list = []
                     for out in output_drcmmse_list:
@@ -368,7 +324,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #Perform state estimation and apply the controller
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
-                        print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                        #print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     J_WDRC_list = []
                     for out in output_wdrc_list:
@@ -386,7 +342,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
                 
-                        print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                        #print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                         
                     J_LQG_list = []
                     for out in output_lqg_list:
@@ -415,7 +371,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
                     J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
                     J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
-                    
+                    print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
+                    print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
+                    print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
+                    print("J_MSE_DRCMMSE_mean : ", J_MSE_DRCMMSE_mean)
                     #-----------------------------------------
                     # Save data #
                     theta_v_ = f"_{str(theta).replace('.', '_')}" # change 1.0 to 1_0 for file name

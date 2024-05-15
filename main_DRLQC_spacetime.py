@@ -151,7 +151,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     drlqc_0_0001_time_std = []
     drlqc_0_001_time_std = []
     drlqc_0_01_time_std = []
-    
+    np.random.seed(seed) # fix Random seed!
     for noise_dist in noisedist:
         for dim in dimension_list:
             #-------Initialization-------
@@ -169,7 +169,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 theta = theta_v_list[0]
                 print("CURRENT DIMENSION : ", dim)
                 print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ theta_w : ", theta_w, "/ theta_v : ", theta, "/ Horizon : ", T)
-                np.random.seed(seed) # fix Random seed!
                 print("--------------------------------------------")
                 print("number of noise sample : ", num_noise)
                 print("number of disturbance sample : ", num_samples)
