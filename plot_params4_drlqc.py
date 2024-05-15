@@ -208,12 +208,18 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     # Set labels
     ax.set_xlabel(r'$\theta_w$', fontsize=16)
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
-    ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
+    ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     # Set z-axis limits
     ax.set_zlim(z_min, z_max)
     
     ax.view_init(elev=14, azim=35)
-    
+    ax.zaxis.set_rotate_label(False)
+    a = ax.zaxis.label.get_rotation()
+    if a<180:
+        a += 90
+    ax.zaxis.label.set_rotation(a)
+    a = ax.zaxis.label.get_rotation()
+    ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
     fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
