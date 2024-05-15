@@ -271,7 +271,7 @@ if __name__ == "__main__":
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     else:
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_v_list = [0.2, 0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
         
     # Regular expression pattern to extract numbers from file names
@@ -307,6 +307,7 @@ if __name__ == "__main__":
                 theta_v_value += float(theta_v_str)/10
                 #changed _1_5_ to 1.5!
                 # Store theta_w and theta values
+                print(theta_v_value)
                 drce_theta_w_values.append(theta_w_value)
                 drce_theta_v_values.append(theta_v_value)
             
