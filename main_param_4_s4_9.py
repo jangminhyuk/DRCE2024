@@ -363,14 +363,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     for out in output_drcmmse_list:
                         J_MSE_DRCMMSE_list.append(out['mse'])
                         
-                    J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
-                    J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
-                    J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
-                    J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
-                    print("J_MSE_LQG_mean : ", J_MSE_LQG_mean)
-                    print("J_MSE_WDRC_mean : ", J_MSE_WDRC_mean)
-                    print("J_MSE_DRCE_mean : ", J_MSE_DRCE_mean)
-                    print("J_MSE_DRCMMSE_mean : ", J_MSE_DRCMMSE_mean)
+                    J_MSE_LQG_sum = np.sum(J_MSE_LQG_list)/num_sim
+                    J_MSE_WDRC_sum = np.sum(J_MSE_WDRC_list)/num_sim
+                    J_MSE_DRCE_sum = np.sum(J_MSE_DRCE_list)/num_sim
+                    J_MSE_DRCMMSE_sum = np.sum(J_MSE_DRCMMSE_list)
+                    print("J_MSE_LQG : ", J_MSE_LQG_sum)
+                    print("J_MSE_WDRC : ", J_MSE_WDRC_sum)
+                    print("J_MSE_DRCE : ", J_MSE_DRCE_sum)
+                    print("J_MSE_DRCMMSE : ", J_MSE_DRCMMSE_sum)
                     #-----------------------------------------
                     # Save data #
                     theta_v_ = f"_{str(theta).replace('.', '_')}" # change 1.0 to 1_0 for file name
@@ -379,19 +379,19 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         save_data(path + 'drce_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
                         save_data(path + 'drcmmse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCMMSE_mean)
                         save_data(path + 'wdrc_' + str(lambda_) + '.pkl', J_WDRC_mean)
-                        save_data(path + 'drce_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_mean)
-                        save_data(path + 'drcmmse_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_mean)
-                        save_data(path + 'wdrc_mse_' + str(lambda_) + '.pkl', J_MSE_WDRC_mean)
+                        save_data(path + 'drce_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_sum)
+                        save_data(path + 'drcmmse_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_sum)
+                        save_data(path + 'wdrc_mse_' + str(lambda_) + '.pkl', J_MSE_WDRC_sum)
                     else:
                         save_data(path + 'drcmmse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCMMSE_mean)
                         save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
                         save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
-                        save_data(path + 'drcmmse_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_mean)
-                        save_data(path + 'drce_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_mean)
-                        save_data(path + 'wdrc_mse' + theta_w_ + '.pkl', J_MSE_WDRC_mean)
+                        save_data(path + 'drcmmse_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_sum)
+                        save_data(path + 'drce_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_sum)
+                        save_data(path + 'wdrc_mse' + theta_w_ + '.pkl', J_MSE_WDRC_sum)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
-                    save_data(path + 'lqg_mse.pkl', J_MSE_LQG_mean)
+                    save_data(path + 'lqg_mse.pkl', J_MSE_LQG_sum)
             
                     #Summarize and plot the results
                     print('\n-------Summary-------')

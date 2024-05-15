@@ -206,6 +206,7 @@ class LQG:
         #Collect Estimation MSE 
         for t in range(self.T):
             self.J_mse[t] = (x_mean[t]-x[t]).T@(self.S[t])@(x_mean[t]-x[t])
+        
         #Compute the total cost
         J[self.T] = x[self.T].T @ self.Qf @ x[self.T]
         for t in range(self.T-1, -1, -1):
