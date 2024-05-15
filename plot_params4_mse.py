@@ -77,7 +77,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     )
     
     # Plot smooth surface - DCE
-    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='yellow', label='WDRC+DRMMSE ambiguity w/ x and v')
+    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='yellow', label='WDRC+DRMMSE')
     surfaces.append(surface_drcmmse)
     labels.append('WDRC+DRMMSE')
     
@@ -103,7 +103,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     # Set labels
     ax.set_xlabel(r'$\lambda$', fontsize=16)
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
-    ax.set_zlabel(r'Average MSE', fontsize=16, rotation=90, labelpad=3)
+    ax.set_zlabel(r'Weighted MSE', fontsize=16, rotation=90, labelpad=3)
     
     ax.view_init(elev=20, azim=-65)
     
