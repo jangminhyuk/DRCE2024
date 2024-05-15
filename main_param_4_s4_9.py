@@ -130,7 +130,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     if dist=='normal':
         num_samples=num_noise_samples=15
-        num_x0_samples=15
+        num_x0_samples=10
     else:
         num_samples=num_noise_samples=num_x0_samples=20
     num_noise_list = [num_noise_samples]
