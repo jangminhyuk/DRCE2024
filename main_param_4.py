@@ -110,7 +110,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     nu = 10 #control input dimension
     ny = 10#output dimension
     temp = np.ones((nx, nx))
-    A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
+    A = 0.2*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
     if infinite: 
@@ -123,7 +123,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     #theta_v_list = [5.0]
     #lambda_list = [6]
-    theta_x0 = 5.0 # radius of initial state ambiguity set
+    theta_x0 = 2.0 # radius of initial state ambiguity set
     use_lambda = True # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
@@ -269,8 +269,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #Perform state estimation and apply the controller
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
+                        if i%50==0:
+                            print("Simulation #",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     
-                        print('cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
                     
                     J_DRCE_list = []
                     for out in output_drce_list:
@@ -289,8 +290,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #Perform state estimation and apply the controller
                         output_drcmmse = drcmmse.forward()
                         output_drcmmse_list.append(output_drcmmse)
+                        if i%50==0:
+                            print("Simulation #",i, ' | cost (DRCMMSE):', output_drcmmse['cost'][0], 'time (DRCMMSE):', output_drcmmse['comp_time'])
                     
-                        print('cost (DRCMMSE):', output_drcmmse['cost'][0], 'time (DRCMMSE):', output_drcmmse['comp_time'])
                     
                     J_DRCMMSE_list = []
                     for out in output_drcmmse_list:
@@ -310,7 +312,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #Perform state estimation and apply the controller
                         output_wdrc = wdrc.forward()
                         output_wdrc_list.append(output_wdrc)
-                        print('cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
+                        if i%50==0:
+                            print("Simulation #",i, ' | cost (WDRC):', output_wdrc['cost'][0], 'time (WDRC):', output_wdrc['comp_time'])
                     
                     J_WDRC_list = []
                     for out in output_wdrc_list:
@@ -328,7 +331,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         output_lqg = lqg.forward()
                         output_lqg_list.append(output_lqg)
                 
-                        print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                        if i%50==0:
+                            print("Simulation #",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                         
                     J_LQG_list = []
                     for out in output_lqg_list:
