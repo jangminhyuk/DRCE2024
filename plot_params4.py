@@ -77,9 +77,9 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     )
     
     # Plot smooth surface - DCE
-    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='yellow', label='WDRC+DRMMSE ambiguity w/ x and v')
+    surface_drcmmse = ax.plot_surface(lambda_grid_drcmmse, theta_v_grid_drcmmse, cost_grid_drcmmse, alpha=0.6, color='yellow', label='WDRC+DRMMSE')
     surfaces.append(surface_drcmmse)
-    labels.append('WDRC+DRMMSE ambiguity w/ x and v')
+    labels.append('WDRC+DRMMSE')
     
     #---------------------------
     # Interpolate cost values for smooth surface - DRKF
@@ -263,9 +263,9 @@ if __name__ == "__main__":
     theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
     theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0]
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+    lambda_list = [5, 10, 15, 20, 25, 30] # disturbance distribution penalty parameter
     #lambda_list = [15, 20, 30, 35, 40, 50, 60]
-    lambda_list = [15, 20, 30, 35, 40, 50]
+    #lambda_list = [15, 20, 30, 35, 40, 50]
 
     # Regular expression pattern to extract numbers from file names
     
