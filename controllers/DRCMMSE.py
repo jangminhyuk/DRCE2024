@@ -291,7 +291,7 @@ class DRCMMSE:
         # if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
         #     print("Next X_post is larger !")
         # print("M_opt norm : ", np.linalg.norm(sol[4].value))
-        print("X_post norm : " , np.linalg.norm(sol[0].value))
+        #print("X_post norm : " , np.linalg.norm(sol[0].value))
         #print("Kalman gain norm : ", np.linalg.norm(S_xy_opt @ np.linalg.inv(S_yy_opt)))
         # self.previousX = sol[0].value
         # self.previousM = sol[4].value
