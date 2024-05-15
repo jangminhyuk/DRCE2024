@@ -40,9 +40,9 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
 
     # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
-    surfaces.append(surface_lqg)
-    labels.append('LQG')
+    #surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
+    #surfaces.append(surface_lqg)
+    #labels.append('LQG')
     #-------------------------
     
     # Repeat the process for WDRC
