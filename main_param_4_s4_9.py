@@ -118,6 +118,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     A = (np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10) 
     C = np.hstack([np.eye(9),np.zeros((9,1))])
+    #C = np.eye(10)
     #----------------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)

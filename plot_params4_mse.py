@@ -274,7 +274,7 @@ if __name__ == "__main__":
     if args.dist=='normal':
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     else:
-        lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+        lambda_list = [20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
 
 
     # Regular expression pattern to extract numbers from file names
