@@ -40,9 +40,9 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
 
     # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
-    surfaces.append(surface_lqg)
-    labels.append('LQG')
+    #surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
+    #surfaces.append(surface_lqg)
+    #labels.append('LQG')
     #-------------------------
     
     # Repeat the process for WDRC
@@ -260,12 +260,15 @@ if __name__ == "__main__":
     
     theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] # radius of noise ambiguity set
     #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
-    theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
+    #theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
     theta_v_list = [1.0, 2.0, 4.0, 6.0, 8.0, 10.0]
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     lambda_list = [5, 10, 15, 20, 25, 30] # disturbance distribution penalty parameter
     #lambda_list = [15, 20, 30, 35, 40, 50, 60]
-    lambda_list = [15, 20, 25, 30, 35, 40, 45, 50]
+    if args.dist=='normal':
+        lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+    else:
+        lambda_list = [20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
 
     # Regular expression pattern to extract numbers from file names
     

@@ -203,8 +203,10 @@ class LQG:
        
         self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
 
+        
         #Collect Estimation MSE 
         for t in range(self.T):
+            #print("LQG S[",t,"] : ", np.linalg.norm(self.S[t]))
             self.J_mse[t] = (x_mean[t]-x[t]).T@(self.S[t])@(x_mean[t]-x[t])
         
         #Compute the total cost
