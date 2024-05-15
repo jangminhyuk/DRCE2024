@@ -28,20 +28,20 @@ def summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_
     fig= plt.figure(figsize=(6,4), dpi=300)
     
     #----------------------------------------------
-    plt.plot(t[:4], drlqc_0_0001_avgT, color='dimgrey', label='DRLQC (1e-4)',linestyle=':')
-    plt.fill_between(t[:4], drlqc_0_0001_avgT + 2*drlqc_0_0001_stdT, drlqc_0_0001_avgT - 2*drlqc_0_0001_stdT, facecolor='grey', alpha=0.3)
+    #plt.plot(t[:4], drlqc_0_0001_avgT, color='black', label='DRLQC (1e-4)',linestyle=':')
+    #plt.fill_between(t[:4], drlqc_0_0001_avgT + 0.25*drlqc_0_0001_stdT, drlqc_0_0001_avgT - 0.25*drlqc_0_0001_stdT, facecolor='dimgrey', alpha=0.3)
     
     #----------------------------------------------
-    plt.plot(t[:5], drlqc_0_001_avgT, color='dimgrey', label='DRLQC (1e-3)')
-    plt.fill_between(t[:5], drlqc_0_001_avgT + 2*drlqc_0_001_stdT, drlqc_0_001_avgT - 2*drlqc_0_001_stdT, facecolor='grey', alpha=0.3)
+    plt.plot(t[:5], drlqc_0_001_avgT, color='grey', label='DRLQC (1e-3)')
+    plt.fill_between(t[:5], drlqc_0_001_avgT + 0.5*drlqc_0_001_stdT, drlqc_0_001_avgT - 0.5*drlqc_0_001_stdT, facecolor='silver', alpha=0.3)
     
     #----------------------------------------------
-    plt.plot(t[:6], drlqc_0_01_avgT, color='dimgrey', label='DRLQC (1e-2)',linestyle='--')
-    plt.fill_between(t[:6], drlqc_0_01_avgT + 2*drlqc_0_01_stdT, drlqc_0_01_avgT - 2*drlqc_0_01_stdT, facecolor='grey', alpha=0.3)
+    plt.plot(t[:6], drlqc_0_01_avgT, color='grey', label='DRLQC (1e-2)',linestyle='--')
+    plt.fill_between(t[:6], drlqc_0_01_avgT + 0.5*drlqc_0_01_stdT, drlqc_0_01_avgT - 0.5*drlqc_0_01_stdT, facecolor='silver', alpha=0.3)
 
     
     plt.plot(t, drce_avgT,  color='tab:green', label='WDR-CE')
-    plt.fill_between(t, drce_avgT + 2*drce_stdT, drce_avgT - 2*drce_stdT, facecolor='tab:green', alpha=0.3)
+    plt.fill_between(t, drce_avgT + 0.5*drce_stdT, drce_avgT - 0.5*drce_stdT, facecolor='tab:green', alpha=0.3)
     
     plt.xscale('log')
     plt.yscale('log')
