@@ -163,9 +163,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     use_lambda = False
     lambda_ = 20 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
-    #noisedist = ["normal", "uniform", "quadratic"]
-    #theta_v_list  # radius of noise ambiguity set
-    #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
         theta_w_list = [0.5]
         theta_v_list = [5.0]
