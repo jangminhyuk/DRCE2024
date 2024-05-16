@@ -5,7 +5,9 @@ import numpy as np
 import argparse
 from controllers.LQG import LQG
 from controllers.WDRC import WDRC
+from controllers.WDRC_DRKF import WDRCDRKF
 from controllers.DRCE import DRCE
+from controllers.DRCMMSE import DRCMMSE
 from controllers.inf_LQG import inf_LQG
 from controllers.inf_WDRC import inf_WDRC
 from controllers.inf_DRCE import inf_DRCE
@@ -85,7 +87,12 @@ def gen_sample_dist_inf(dist, N_sample, mu_w=None, Sigma_w=None, w_max=None, w_m
     mean_ = np.average(w, axis = 1)[...,np.newaxis]
     var_ = np.cov(w)
     return mean_, var_
+def create_matrices(nx, ny, nu):
+    A = np.load("./inputs/A.npy") # (n x n) matrix
+    B = np.load("./inputs/B.npy")
+    C = np.hstack([np.eye(ny, int(ny/2)), np.zeros((ny, int((nx-ny)/2))), np.eye(ny, int(ny/2), k=-int(ny/2)), np.zeros((ny, int((nx-ny)/2)))])
 
+    return A, B, C
 
 def save_data(path, data):
     output = open(path, 'wb')
@@ -98,36 +105,41 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     seed = 2024 # Random seed
     noisedist = [noise_dist1]
     #noisedist = ["normal", "uniform", "quadratic"]
-    num_noise_list = [num_noise_samples]
+    
     theta_w = 1.0 # will not be used for this file!!!
-    num_x0_samples = 15 #  x0 samples 
-    # for the noise_plot_results!!
-    output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean=[], [], []
-    output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std=[], [], []
+    
+    output_J_WDRC_mean, output_J_WDRC_DRKF_mean, output_J_DRCE_mean, output_J_DRCMMSE_mean =[], [], [], []
+    output_J_WDRC_std, output_J_WDRC_DRKF_std, output_J_DRCE_std, output_J_DRCMMSE_std=[], [], [], []
     #-------Initialization-------
     nx = 10 #state dimension
     nu = 10 #control input dimension
-    ny = 10#output dimension
+    ny = 9#output dimension
     temp = np.ones((nx, nx))
     A = np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2)
-    B = C = Q = R = Qf = np.eye(10) 
+    B = Q = R = Qf = np.eye(10)
+    #C = np.eye(10)
+    C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
+    # Sample size
+    num_x0_samples = 20 #  x0 samples 
+    if dist=='normal':
+        num_samples=num_noise_samples=15
+        num_x0_samples=10
+    else:
+        num_samples=num_noise_samples=num_x0_samples=20
+    num_noise_list = [num_noise_samples]
+    #---------------------
     if infinite: 
         T = 100 # Test for longer horizon if infinite (Can be erased!)
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    
+    theta_v_list = [2.0, 4.0, 6.0, 8.0, 10.0] # radius of noise ambiguity set
+    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0] # radius of noise ambiguity set
+    theta_w_list = [2.0, 4.0, 6.0, 8.0, 10.0] # radius of noise ambiguity set
+    lambda_list = [10, 20, 30, 40, 50] # disturbance distribution penalty parameter
     #theta_v_list = [5.0]
     #lambda_list = [6]
-    if dist=='normal':
-        theta_x0 = 1.0 # radius of initial state ambiguity set
-        lambda_list = [7, 10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-    else:
-        theta_x0 = 0.5
-        lambda_list = [7, 10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-    #lambda_list = [7]
+    theta_x0 = 5.0 # radius of initial state ambiguity set  
     use_lambda = True # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
@@ -152,50 +164,53 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     
                     if infinite:
                         if use_lambda:
-                            path = "./results/{}_{}/infinite/multiple/params_lambda/".format(dist, noise_dist)
+                            path = "./results/{}_{}/infinite/multiple/params_lambda/filter/".format(dist, noise_dist)
                         else:
-                            path = "./results/{}_{}/infinite/multiple/params_thetas/".format(dist, noise_dist)
+                            path = "./results/{}_{}/infinite/multiple/params_thetas/filter/".format(dist, noise_dist)
                     else:
                         if use_lambda:
-                            path = "./results/{}_{}/finite/multiple/params_lambda/".format(dist, noise_dist)
+                            path = "./results/{}_{}/finite/multiple/params_lambda/filter/".format(dist, noise_dist)
                         else:
-                            path = "./results/{}_{}/finite/multiple/params_thetas/".format(dist, noise_dist)
+                            path = "./results/{}_{}/finite/multiple/params_thetas/filter/".format(dist, noise_dist)
                         
                     if not os.path.exists(path):
                         os.makedirs(path)
                 
-                    #-------Disturbance distribution-------
+                    #-------Disturbance Distribution-------
                     if dist == "normal":
                         #disturbance distribution parameters
                         w_max = None
                         w_min = None
-                        mu_w = 0.1*np.ones((nx, 1))
+                        mu_w = 0.2*np.ones((nx, 1))
                         Sigma_w= 0.1*np.eye(nx)
                         #initial state distribution parameters
                         x0_max = None
                         x0_min = None
-                        x0_mean = 0.1*np.ones((nx,1))
+                        x0_mean = 1*np.ones((nx,1))
+                        #x0_mean[-1]=-1
                         x0_cov = 0.1*np.eye(nx)
                     elif dist == "quadratic":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
+                        w_max = 1.0*np.ones(nx)
                         w_min = -0.5*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 3.0/20.0*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
                         x0_max = 0.5*np.ones(nx)
                         x0_min = 0.0*np.ones(nx)
+                        #x0_max[-1] = 0.0
+                        #x0_min[-1] = -2.0
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
                     elif dist =="uniform":
                         #disturbance distribution parameters
-                        w_max = 0.2*np.ones(nx)
-                        w_min = -0.4*np.ones(nx)
+                        w_max = 0.3*np.ones(nx)
+                        w_min = -0.2*np.ones(nx)
                         mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
                         Sigma_w = 1/12*np.diag((w_max - w_min)**2)
                         #initial state distribution parameters
-                        x0_max = 0.5*np.ones(nx)
-                        x0_min = 0.0*np.ones(nx)
+                        x0_max = 0.1*np.ones(nx)
+                        x0_min = -0.1*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
@@ -203,18 +218,18 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     if noise_dist =="normal":
                         v_max = None
                         v_min = None
-                        M = 2.0*np.eye(ny) #observation noise covariance
-                        mu_v = 0.5*np.ones((ny, 1))
+                        M = 1.5*np.eye(ny) #observation noise covariance
+                        mu_v = 0.2*np.ones((ny, 1))
                     elif noise_dist =="quadratic":
-                        v_min = -1.0*np.ones(ny)
-                        v_max = 2.0*np.ones(ny)
+                        v_min = -1.5*np.ones(ny)
+                        v_max = 3.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
                     elif noise_dist == "uniform":
-                        v_min = -2.0*np.ones(ny)
-                        v_max = 6.0*np.ones(ny)
+                        v_min = -1.0*np.ones(ny)
+                        v_max = 2.0*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
+                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariancece
                         
                         
                     #-------Estimate the nominal distribution-------
@@ -241,7 +256,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     #-------Perform n independent simulations and summarize the results-------
                     output_lqg_list = []
                     output_wdrc_list = []
+                    output_wdrc_drkf_list = []
                     output_drce_list = []
+                    output_drcmmse_list = []
                     
                     #Initialize controllers
                     
@@ -253,13 +270,20 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     else:
                         wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
                         drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                        lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
-        
+                        wdrcdrkf = WDRCDRKF(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        drcmmse = DRCMMSE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                        
+                        #lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
+                    
+                    wdrcdrkf.backward()
+                    drcmmse.backward()
                     wdrc.backward()
                     drce.backward()
-                    lqg.backward()
+                    #lqg.backward()
                         
                     print('---------------------')
+                    
+
                     
                     #----------------------------
                     print("Running DRCE Forward step ...")
@@ -268,10 +292,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         #Perform state estimation and apply the controller
                         output_drce = drce.forward()
                         output_drce_list.append(output_drce)
-                    
                         if i%50==0:
                             print("Simulation #",i, ' | cost (DRCE):', output_drce['cost'][0], 'time (DRCE):', output_drce['comp_time'])
-                    
                     J_DRCE_list = []
                     for out in output_drce_list:
                         J_DRCE_list.append(out['cost'])
@@ -281,6 +303,26 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     output_J_DRCE_std.append(J_DRCE_std[0])
                     print(" Average cost (DRCE) : ", J_DRCE_mean[0])
                     print(" std (DRCE) : ", J_DRCE_std[0])
+                    
+                    #----------------------------
+                    print("Running DRCMMSE Forward step ...")
+                    for i in range(num_sim):
+                        
+                        #Perform state estimation and apply the controller
+                        output_drcmmse = drcmmse.forward()
+                        output_drcmmse_list.append(output_drcmmse)
+                        if i%50==0:
+                            print("Simulation #",i, ' | cost (DRCMMSE):', output_drcmmse['cost'][0], 'time (DRCMMSE):', output_drcmmse['comp_time'])
+                    
+                    J_DRCMMSE_list = []
+                    for out in output_drcmmse_list:
+                        J_DRCMMSE_list.append(out['cost'])
+                    J_DRCMMSE_mean= np.mean(J_DRCMMSE_list, axis=0)
+                    J_DRCMMSE_std = np.std(J_DRCMMSE_list, axis=0)
+                    output_J_DRCMMSE_mean.append(J_DRCMMSE_mean[0])
+                    output_J_DRCMMSE_std.append(J_DRCMMSE_std[0])
+                    print(" Average cost (DRCMMSE) : ", J_DRCMMSE_mean[0])
+                    print(" std (DRCMMSE) : ", J_DRCMMSE_std[0])
                     
                     #----------------------------             
                     np.random.seed(seed) # fix Random seed!
@@ -302,25 +344,65 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     output_J_WDRC_std.append(J_WDRC_std[0])
                     print(" Average cost (WDRC) : ", J_WDRC_mean[0])
                     print(" std (WDRC) : ", J_WDRC_std[0])
-                    #----------------------------
+                    #----------------------------             
                     np.random.seed(seed) # fix Random seed!
-                    print("Running LQG Forward step ...")
+                    print("Running WDRCDRKF Forward step ...")  
                     for i in range(num_sim):
-                        output_lqg = lqg.forward()
-                        output_lqg_list.append(output_lqg)
                 
+                        #Perform state estimation and apply the controller
+                        output_wdrc_drkf = wdrcdrkf.forward()
+                        output_wdrc_drkf_list.append(output_wdrc_drkf)
                         if i%50==0:
-                            print("Simulation #",i, ' | cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
+                            print("Simulation #",i, ' | cost (WDRC_DRKF):', output_wdrc_drkf['cost'][0], 'time (WDRC_DRKF):', output_wdrc_drkf['comp_time'])
+                    
+                    J_WDRC_DRKF_list = []
+                    for out in output_wdrc_drkf_list:
+                        J_WDRC_DRKF_list.append(out['cost'])
+                    J_WDRC_DRKF_mean= np.mean(J_WDRC_DRKF_list, axis=0)
+                    J_WDRC_DRKF_std = np.std(J_WDRC_DRKF_list, axis=0)
+                    output_J_WDRC_DRKF_mean.append(J_WDRC_DRKF_mean[0])
+                    output_J_WDRC_DRKF_std.append(J_WDRC_DRKF_std[0])
+                    print(" Average cost (WDRC_DRKF) : ", J_WDRC_DRKF_mean[0])
+                    print(" std (WDRC_DRKF) : ", J_WDRC_DRKF_std[0])
+                    #----------------------------
+                    # np.random.seed(seed) # fix Random seed!
+                    # print("Running LQG Forward step ...")
+                    # for i in range(num_sim):
+                    #     output_lqg = lqg.forward()
+                    #     output_lqg_list.append(output_lqg)
+                
+                    #     print('cost (LQG):', output_lqg['cost'][0], 'time (LQG):', output_lqg['comp_time'])
                         
-                    J_LQG_list = []
-                    for out in output_lqg_list:
-                        J_LQG_list.append(out['cost'])
-                    J_LQG_mean= np.mean(J_LQG_list, axis=0)
-                    J_LQG_std = np.std(J_LQG_list, axis=0)
-                    output_J_LQG_mean.append(J_LQG_mean[0])
-                    output_J_LQG_std.append(J_LQG_std[0])
-                    print(" Average cost (LQG) : ", J_LQG_mean[0])
-                    print(" std (LQG) : ", J_LQG_std[0])
+                    # J_LQG_list = []
+                    # for out in output_lqg_list:
+                    #     J_LQG_list.append(out['cost'])
+                    # J_LQG_mean= np.mean(J_LQG_list, axis=0)
+                    # J_LQG_std = np.std(J_LQG_list, axis=0)
+                    # output_J_LQG_mean.append(J_LQG_mean[0])
+                    # output_J_LQG_std.append(J_LQG_std[0])
+                    # print(" Average cost (LQG) : ", J_LQG_mean[0])
+                    # print(" std (LQG) : ", J_LQG_std[0])
+                    
+                    # print("-------------------------")
+                    # -------------------------
+                    # Collect State Estimation errors
+                    J_MSE_WDRC_DRKF_list,J_MSE_WDRC_list,J_MSE_DRCE_list,J_MSE_DRCMMSE_list = [],[],[],[]
+                    # for out in output_drkf_wd_list:
+                    #     J_MSE_LQG_list.append(out['mse'])
+                    for out in output_wdrc_list:
+                        J_MSE_WDRC_list.append(out['mse'])
+                    for out in output_wdrc_drkf_list:
+                        J_MSE_WDRC_DRKF_list.append(out['mse'])
+                    for out in output_drce_list:
+                        J_MSE_DRCE_list.append(out['mse'])
+                    for out in output_drcmmse_list:
+                        J_MSE_DRCMMSE_list.append(out['mse'])
+                        
+                    #J_MSE_LQG_mean = np.mean(J_MSE_LQG_list)
+                    J_MSE_WDRC_mean = np.mean(J_MSE_WDRC_list)
+                    J_MSE_WDRC_DRKF_mean = np.mean(J_MSE_WDRC_DRKF_list)
+                    J_MSE_DRCE_mean = np.mean(J_MSE_DRCE_list)
+                    J_MSE_DRCMMSE_mean = np.mean(J_MSE_DRCMMSE_list)
                     
                     #-----------------------------------------
                     # Save data #
@@ -328,12 +410,29 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     theta_w_ = f"_{str(theta_w).replace('.', '_')}" # change 1.0 to 1_0 for file name
                     if use_lambda:
                         save_data(path + 'drce_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
+                        save_data(path + 'drcmmse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_DRCMMSE_mean)
+                        save_data(path + 'wdrc_drkf' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_WDRC_DRKF_mean)
                         save_data(path + 'wdrc_' + str(lambda_) + '.pkl', J_WDRC_mean)
+                        #save_data(path + 'wdrc_drkf_' + str(lambda_) + '.pkl', J_WDRC_DRKF_mean)
+                        save_data(path + 'drce_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_mean)
+                        save_data(path + 'drcmmse_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_mean)
+                        save_data(path + 'wdrc_drkf_mse_' + str(lambda_) + 'and' + theta_v_+ '.pkl', J_MSE_WDRC_DRKF_mean)
+                        save_data(path + 'wdrc_mse_' + str(lambda_) + '.pkl', J_MSE_WDRC_mean)
+                        #save_data(path + 'wdrc_drkf_mse_' + str(lambda_) + '.pkl', J_MSE_WDRC_DRKF_mean)
                     else:
+                        save_data(path + 'drcmmse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCMMSE_mean)
                         save_data(path + 'drce' + theta_w_ + 'and' + theta_v_+ '.pkl', J_DRCE_mean)
+                        save_data(path + 'wdrc_drkf' + theta_w_ + 'and' + theta_v_+ '.pkl', J_WDRC_DRKF_mean)
                         save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
+                        #save_data(path + 'wdrc_drkf' + theta_w_ + '.pkl', J_WDRC_DRKF_mean)
+                        save_data(path + 'drcmmse_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCMMSE_mean)
+                        save_data(path + 'wdrc_drkf_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_WDRC_DRKF_mean)
+                        save_data(path + 'drce_mse' + theta_w_ + 'and' + theta_v_+ '.pkl', J_MSE_DRCE_mean)
+                        save_data(path + 'wdrc_mse' + theta_w_ + '.pkl', J_MSE_WDRC_mean)
+                        #save_data(path + 'wdrc_drkf_mse' + theta_w_ + '.pkl', J_MSE_WDRC_DRKF_mean)
                         
-                    save_data(path + 'lqg.pkl', J_LQG_mean)
+                    #save_data(path + 'lqg.pkl', J_LQG_mean)
+                    #save_data(path + 'lqg_mse.pkl', J_MSE_LQG_mean)
             
                     #Summarize and plot the results
                     print('\n-------Summary-------')
@@ -343,14 +442,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
     if infinite:
         if use_lambda:
-            print("Now use : python plot_params_long.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_F.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params_long.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_F.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
     else:
         if use_lambda:
-            print("Now use : python plot_params_long.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_F.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params_long.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_F.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
@@ -359,9 +458,9 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
-    parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
-    parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
-    parser.add_argument('--horizon', required=False, default=200, type=int) #horizon length
+    parser.add_argument('--num_samples', required=False, default=20, type=int) #number of disturbance samples
+    parser.add_argument('--num_noise_samples', required=False, default=20, type=int) #number of noise samples
+    parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
     parser.add_argument('--plot', required=False, action="store_true") #plot results+
     parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     
