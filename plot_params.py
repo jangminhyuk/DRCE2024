@@ -40,7 +40,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
 
     # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
+    surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.5, color='red', label='LQG')
     surfaces.append(surface_lqg)
     labels.append('LQG')
     #-------------------------
@@ -60,7 +60,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.6, color='blue', label='WDRC')
     surfaces.append(surface_wdrc)
     labels.append('WDRC')
     #--------------
@@ -78,7 +78,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     )
     
     # Plot smooth surface - DCE
-    surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE')
+    surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.5, color='green', label='WDR-CE', antialiased=False)
     surfaces.append(surface_drce)
     labels.append('WDR-CE')
     
@@ -90,8 +90,14 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
     ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
     
-    ax.view_init(elev=20, azim=-65)
-    
+    ax.view_init(elev=15, azim=40)
+    ax.zaxis.set_rotate_label(False)
+    a = ax.zaxis.label.get_rotation()
+    if a<180:
+        a += 0
+    ax.zaxis.label.set_rotation(a)
+    a = ax.zaxis.label.get_rotation()
+    ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
     fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
@@ -124,7 +130,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
 
     # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(theta_w_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
+    surface_lqg =ax.plot_surface(theta_w_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.5, color='red', label='LQG')
     surfaces.append(surface_lqg)
     labels.append('LQG')
     #-------------------------
@@ -144,7 +150,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
 
     # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC')
+    surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.6, color='blue', label='WDRC', antialiased=False)
     surfaces.append(surface_wdrc)
     labels.append('WDRC')
     #--------------
@@ -162,7 +168,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     )
     
     # Plot smooth surface - DCE
-    surface_drce = ax.plot_surface(theta_w_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE')
+    surface_drce = ax.plot_surface(theta_w_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE', antialiased=False)
     surfaces.append(surface_drce)
     labels.append('WDR-CE')
     
@@ -174,8 +180,14 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     ax.set_ylabel(r'$\theta_v$', fontsize=16)
     ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
     
-    ax.view_init(elev=20, azim=-65)
-    
+    ax.view_init(elev=15, azim=40)
+    ax.zaxis.set_rotate_label(False)
+    a = ax.zaxis.label.get_rotation()
+    if a<180:
+        a += 90
+    ax.zaxis.label.set_rotation(a)
+    a = ax.zaxis.label.get_rotation()
+    ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
     fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
@@ -225,9 +237,9 @@ if __name__ == "__main__":
     theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     
     if args.dist=='normal':
-        lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+        lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     else:
-        lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
+        lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     # Regular expression pattern to extract numbers from file names
     
     
