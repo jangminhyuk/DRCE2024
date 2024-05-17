@@ -34,7 +34,7 @@ def summarize_noise(num_noise_list, avg_cost_lqg, std_cost_lqg, avg_cost_wdrc, s
     
     plt.xlabel(r'Sample Size', fontsize=16)
     plt.ylabel(r'Total Cost', fontsize=16)
-    plt.legend(fontsize=16)
+    plt.legend(fontsize=13)
     plt.grid()
     plt.xlim([t[0], t[-1]])
     plt.xticks(fontsize=16)
