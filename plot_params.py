@@ -80,7 +80,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     # Plot smooth surface - DCE
     surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.5, color='green', label='WDR-CE', antialiased=False)
     surfaces.append(surface_drce)
-    labels.append('WDR-CE')
+    labels.append('WDR-CE [Ours]')
     
     
     ax.legend(handles=surfaces, labels=labels)
@@ -170,7 +170,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     # Plot smooth surface - DCE
     surface_drce = ax.plot_surface(theta_w_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE', antialiased=False)
     surfaces.append(surface_drce)
-    labels.append('WDR-CE')
+    labels.append('WDR-CE [Ours]')
     
     
     ax.legend(handles=surfaces, labels=labels)
