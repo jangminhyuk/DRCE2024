@@ -128,15 +128,25 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         theta_x0 = 0.5
         lambda_list = [7, 10, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
     #lambda_list = [7]
-    use_lambda = True # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
+    use_lambda = False # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
     else:
         dist_parameter_list = theta_w_list
         
+    # Save lambda list
+    WDRC_lambda = np.zeros((6,6))
+    DRCE_lambda = np.zeros((6,6))
+    # if use_lambda == True and dist=="normal":
+    #     WDRC_lambda = np.array([26.41121764, 26.16612111, 26.21934116,26.21934116, 26.36159012, 26.3621963, 26.42347884, 26.43546194, 26.42452678 ])
+    #     DRCE_lambda = np.array([34.91749428, 40.98912609, 39.05410236, 38.13329201, 38.13329201, 46.68884815, 38.21829064, 45.01168795, 39.02915113])
+    # if use_lambda == True and dist=="quadratic":
+    #     WDRC_lambda = np.array([18.73975602, 18.67355442, 18.65363162, 18.68274912, 18.67348403, 18.69286136, 18.69810686, 18.7043255])
+    #     DRCE_lambda = np.array([22.9903849, 23.78663288, 23.88587422,23.72079564, 24.0604179, 24.02581889, 24.07412486, 24.08671891])
+    
     for noise_dist in noisedist:
-        for dist_parameter in dist_parameter_list:
-            for theta in theta_v_list:
+        for idx_w, dist_parameter in enumerate(dist_parameter_list):
+            for idx_v, theta in enumerate(theta_v_list):
                 for num_noise in num_noise_list:
                     
                     np.random.seed(seed) # fix Random seed!
@@ -258,6 +268,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     wdrc.backward()
                     drce.backward()
                     lqg.backward()
+                    
+                    # Save the optimzed lambda
+                    WDRC_lambda[idx_w][idx_v] = wdrc.lambda_
+                    DRCE_lambda[idx_w][idx_v] = drce.lambda_
                         
                     print('---------------------')
                     
@@ -334,7 +348,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
-            
+
+                    save_data(path + 'wdrc_lambda.pkl',WDRC_lambda)
+                    save_data(path + 'drce_lambda.pkl',DRCE_lambda)
+                    
                     #Summarize and plot the results
                     print('\n-------Summary-------')
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)

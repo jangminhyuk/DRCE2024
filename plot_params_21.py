@@ -99,7 +99,7 @@ def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdr
     a = ax.zaxis.label.get_rotation()
     ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
+    fig.savefig(path + 'params_{}_{}_21.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
     
 def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, dist, noise_dist, infinite, use_lambda, path):
@@ -184,12 +184,12 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     ax.zaxis.set_rotate_label(False)
     a = ax.zaxis.label.get_rotation()
     if a<180:
-        a += 90
+        a += 0
     ax.zaxis.label.set_rotation(a)
     a = ax.zaxis.label.get_rotation()
     ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
+    fig.savefig(path + 'params_{}_{}_21.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
 
 if __name__ == "__main__":

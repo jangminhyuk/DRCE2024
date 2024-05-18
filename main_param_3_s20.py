@@ -170,15 +170,18 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     #theta_v_list = [5.0]
     #lambda_list = [12]
     theta_x0 = 0.5 # radius of initial state ambiguity set
-    use_lambda = True # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
+    use_lambda = False # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
     else:
         dist_parameter_list = theta_w_list
         
+    # Save lambda list
+    WDRC_lambda = np.zeros((6,6))
+    DRCE_lambda = np.zeros((6,6))
     for noise_dist in noisedist:
-        for dist_parameter in dist_parameter_list:
-            for theta in theta_v_list:
+        for idx_w, dist_parameter in enumerate(dist_parameter_list):
+            for idx_v, theta in enumerate(theta_v_list):
                 for num_noise in num_noise_list:
                     
                     np.random.seed(seed) # fix Random seed!
@@ -300,7 +303,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     wdrc.backward()
                     drce.backward()
                     lqg.backward()
-                        
+                    # Save the optimzed lambda
+                    WDRC_lambda[idx_w][idx_v] = wdrc.lambda_
+                    DRCE_lambda[idx_w][idx_v] = drce.lambda_
                     print('---------------------')
                     
                     #----------------------------
@@ -376,6 +381,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
+                    
+                    save_data(path + 'wdrc_lambda.pkl',WDRC_lambda)
+                    save_data(path + 'drce_lambda.pkl',DRCE_lambda)
             
                     #Summarize and plot the results
                     print('\n-------Summary-------')
@@ -385,14 +393,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
     if infinite:
         if use_lambda:
-            print("Now use : python plot_params.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params_21.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params_21.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
     else:
         if use_lambda:
-            print("Now use : python plot_params.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params_21.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params_21.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
