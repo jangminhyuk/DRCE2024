@@ -237,13 +237,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     wdrc = []
                     drce = []
                     for i in range(num_sim):
+                        print("iteration ",i,"/",num_sim)
                         if use_lambda==True:
                             lambda_ = WDRC_lambda[idx]
                         wdrc_ = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat[i], Sigma_hat[i], x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat[i], M_hat[i], x0_mean_hat[i][0], x0_cov_hat[i][0], use_lambda)
                         if use_lambda==True:
                             lambda_ = DRCE_lambda[idx]
                         drce_ = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat[i], Sigma_hat[i], x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat[i],  M_hat[i], x0_mean_hat[i][0], x0_cov_hat[i][0], use_lambda)
-                        lqg_ = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w[i], Sigma_w[i], w_max, w_min, v_max, v_min, mu_v, v_mean_hat[i], M_hat[i] , x0_mean_hat[i][0], x0_cov_hat[i][0])
+                        lqg_ = LQG(T, dist, noise_dist, system_data, mu_hat[i], Sigma_hat[i], x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat[i], M_hat[i] , x0_mean_hat[i][0], x0_cov_hat[i][0])
 
                         drce_.backward()
                         wdrc_.backward()

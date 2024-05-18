@@ -227,7 +227,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     a = ax.zaxis.label.get_rotation()
     ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
     plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
+    fig.savefig(path + 'params_{}_{}_zeromean.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
     #plt.clf()
 
 if __name__ == "__main__":
@@ -279,11 +279,11 @@ if __name__ == "__main__":
     
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     else:
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
         
     # Regular expression pattern to extract numbers from file names
@@ -319,7 +319,7 @@ if __name__ == "__main__":
                 theta_v_value += float(theta_v_str)/10
                 #changed _1_5_ to 1.5!
                 # Store theta_w and theta values
-                print(theta_v_value)
+                #print(theta_v_value)
                 drce_theta_w_values.append(theta_w_value)
                 drce_theta_v_values.append(theta_v_value)
             

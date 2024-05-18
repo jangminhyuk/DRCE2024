@@ -381,14 +381,14 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
     if infinite:
         if use_lambda:
-            print("Now use : python plot_params4_drlqc.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc_nonzeromean.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params4_drlqc.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc_nonzeromean.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
     else:
         if use_lambda:
-            print("Now use : python plot_params4_drlqc.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc_nonzeromean.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
         else:
-            print("Now use : python plot_params4_drlqc.py --dist "+ dist + " --noise_dist " + noise_dist)
+            print("Now use : python plot_params4_drlqc_nonzeromean.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
