@@ -349,8 +349,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
 
-                    save_data(path + 'wdrc_lambda.pkl',WDRC_lambda)
-                    save_data(path + 'drce_lambda.pkl',DRCE_lambda)
+                    save_data(path + 'longT_wdrc_lambda.pkl',WDRC_lambda)
+                    save_data(path + 'longT_drce_lambda.pkl',DRCE_lambda)
                     
                     #Summarize and plot the results
                     print('\n-------Summary-------')

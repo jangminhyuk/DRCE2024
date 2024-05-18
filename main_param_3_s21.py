@@ -382,15 +382,15 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
                     
-                    save_data(path + 'wdrc_lambda.pkl',WDRC_lambda)
-                    save_data(path + 'drce_lambda.pkl',DRCE_lambda)
+                    save_data(path + 'nx21_wdrc_lambda.pkl',WDRC_lambda)
+                    save_data(path + 'nx21_drce_lambda.pkl',DRCE_lambda)
             
                     #Summarize and plot the results
                     print('\n-------Summary-------')
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
+    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_params.py is as desired")
     if infinite:
         if use_lambda:
             print("Now use : python plot_params_21.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)

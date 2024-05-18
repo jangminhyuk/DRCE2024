@@ -141,10 +141,12 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         dist_parameter_list = lambda_list
     else:
         dist_parameter_list = theta_w_list
-        
+    # Save lambda list
+    WDRC_lambda = np.zeros((6,8))
+    DRCE_lambda = np.zeros((6,8))
     for noise_dist in noisedist:
-        for dist_parameter in dist_parameter_list:
-            for theta in theta_v_list:
+        for idx_w, dist_parameter in enumerate(dist_parameter_list):
+            for idx_v, theta in enumerate(theta_v_list):
                 for num_noise in num_noise_list:
                     
                     np.random.seed(seed) # fix Random seed!
@@ -275,7 +277,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     wdrc.backward()
                     drce.backward()
                     lqg.backward()
-                        
+                    
+                    # Save the optimzed lambda
+                    WDRC_lambda[idx_w][idx_v] = wdrc.lambda_
+                    DRCE_lambda[idx_w][idx_v] = drce.lambda_
                     print('---------------------')
                     
                     #----------------------------
@@ -373,6 +378,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
             
+                    save_data(path + 'nonzero_wdrc_lambda.pkl',WDRC_lambda)
+                    save_data(path + 'nonzero_drce_lambda.pkl',DRCE_lambda)
                     #Summarize and plot the results
                     print('\n-------Summary-------')
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
