@@ -163,9 +163,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     
                  
                     if use_lambda:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/zero/".format(dist, noise_dist)
                     else:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/zero/".format(dist, noise_dist)
                         
                     if not os.path.exists(path):
                         os.makedirs(path)
@@ -386,7 +386,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
+    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_params.py is as desired")
     if infinite:
         if use_lambda:
             print("Now use : python plot_params4_drlqc_zeromean.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)

@@ -240,9 +240,9 @@ if __name__ == "__main__":
     
     
     if args.use_lambda:
-        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(args.dist, args.noise_dist)
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/nonzero/".format(args.dist, args.noise_dist)
     else:
-        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(args.dist, args.noise_dist)
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/nonzero/".format(args.dist, args.noise_dist)
 
     #Load data
     drlqc_theta_w_values =[]

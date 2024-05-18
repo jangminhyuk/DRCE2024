@@ -162,9 +162,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     
                  
                     if use_lambda:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/nonzero/".format(dist, noise_dist)
                     else:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/nonzero/".format(dist, noise_dist)
                         
                     if not os.path.exists(path):
                         os.makedirs(path)
