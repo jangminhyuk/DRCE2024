@@ -240,9 +240,9 @@ if __name__ == "__main__":
     
     
     if args.use_lambda:
-        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(args.dist, args.noise_dist)
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/nonzero/".format(args.dist, args.noise_dist)
     else:
-        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(args.dist, args.noise_dist)
+        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/nonzero/".format(args.dist, args.noise_dist)
 
     #Load data
     drlqc_theta_w_values =[]
@@ -271,19 +271,14 @@ if __name__ == "__main__":
     # theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
     # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] # radius of noise ambiguity set
-    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    #theta_v_list = [5.0, 10.0, 15.0]
-    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_v_list = [0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     else:
         lambda_list = [15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
-        theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        theta_v_list = [0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
         
     # Regular expression pattern to extract numbers from file names
@@ -319,7 +314,7 @@ if __name__ == "__main__":
                 theta_v_value += float(theta_v_str)/10
                 #changed _1_5_ to 1.5!
                 # Store theta_w and theta values
-                print(theta_v_value)
+                #print(theta_v_value)
                 drce_theta_w_values.append(theta_w_value)
                 drce_theta_v_values.append(theta_v_value)
             

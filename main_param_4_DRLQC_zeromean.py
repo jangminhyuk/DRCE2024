@@ -126,13 +126,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     theta_v_list = [5.0, 10.0, 15.0] # radius of noise ambiguity set
     if dist=='normal':
-        theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     else:
-        theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     lambda_list = [6, 20, 30, 40, 50] # disturbance distribution penalty parameter
-    theta_v_list = [0.5]
+    #theta_v_list = [0.5]
     #lambda_list = [6]
     num_x0_samples = 15 #  x0 samples 
     theta_x0 = 2.0 # radius of initial state ambiguity set
@@ -141,10 +141,13 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         dist_parameter_list = lambda_list
     else:
         dist_parameter_list = theta_w_list
-        
+    # Save lambda list
+    WDRC_lambda = np.zeros((6,7))
+    DRCE_lambda = np.zeros((6,7))
+    
     for noise_dist in noisedist:
-        for dist_parameter in dist_parameter_list:
-            for theta in theta_v_list:
+        for idx_w, dist_parameter in enumerate(dist_parameter_list):
+            for idx_v,theta in enumerate(theta_v_list):
                 for num_noise in num_noise_list:
                     
                     np.random.seed(seed) # fix Random seed!
@@ -160,9 +163,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     
                  
                     if use_lambda:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/zero/".format(dist, noise_dist)
                     else:
-                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/".format(dist, noise_dist)
+                        path = "./results/{}_{}/finite/multiple/DRLQC/params_thetas/zero/".format(dist, noise_dist)
                         
                     if not os.path.exists(path):
                         os.makedirs(path)
@@ -275,7 +278,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     wdrc.backward()
                     drce.backward()
                     lqg.backward()
-                        
+                    
+                    # Save the optimzed lambda
+                    WDRC_lambda[idx_w][idx_v] = wdrc.lambda_
+                    DRCE_lambda[idx_w][idx_v] = drce.lambda_
                     print('---------------------')
                     
                     #----------------------------
@@ -372,13 +378,15 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         save_data(path + 'wdrc' + theta_w_ + '.pkl', J_WDRC_mean)
                         
                     save_data(path + 'lqg.pkl', J_LQG_mean)
-            
+                    
+                    save_data(path + 'zero_wdrc_lambda.pkl', WDRC_lambda)
+                    save_data(path + 'zero_drce_lambda.pkl', DRCE_lambda)
                     #Summarize and plot the results
                     print('\n-------Summary-------')
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
+    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_params.py is as desired")
     if infinite:
         if use_lambda:
             print("Now use : python plot_params4_drlqc_zeromean.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
