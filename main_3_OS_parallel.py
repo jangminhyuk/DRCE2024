@@ -43,6 +43,22 @@ def perform_simulation(i, lambda_, num_sim, use_lambda, WDRC_lambda, DRCE_lambda
     }
     return result
 
+def sample_forward(algo, i):
+    return algo[i].forward()
+
+def drce_forward_step(drce, i, os_sample_size):
+    drce_cert_val = drce[i].objective(drce[i].lambda_) * drce[i].T
+    output_drce_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(drce,i) for _ in range(os_sample_size))
+    return drce_cert_val, output_drce_sample
+
+def wdrc_forward_step(wdrc, i, os_sample_size):
+    output_wdrc_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(wdrc,i) for _ in range(os_sample_size))
+    return output_wdrc_sample
+
+def lqg_forward_step(lqg, i, os_sample_size):
+    output_lqg_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(lqg, i) for _ in range(os_sample_size))
+    return output_lqg_sample
+
 def uniform(a, b, N=1):
     n = a.shape[0]
     x = a + (b-a)*np.random.rand(N,n)
@@ -150,13 +166,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     lambda_ = 20 # will not be used if the parameter "use_lambda = False"
     noisedist = [noise_dist1]
     
-    #theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    theta_w_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0] # radius of noise ambiguity set
-    theta_w_list = [1.5] # radius of noise ambiguity set
+    theta_v_list = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0] # radius of noise ambiguity set
+    theta_w_list = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0] # radius of noise ambiguity set 0.5, 1.0
     theta_x0 = 0.5
-    theta_v_list = [2.0]
-    num_noise_list = [10, 15, 20]
-    num_noise_list = [15]
+    #theta_v_list = [0.5]
+    num_noise_list = [10, 15, 20, 30, 40, 50, 100] #10
     # Save lambda list
     WDRC_lambda, DRCE_lambda = [],[]
     # if use_lambda == True and dist=="normal":
@@ -168,8 +182,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         
     for noise_dist in noisedist:
         for theta_w in theta_w_list:
-            for theta in theta_v_list:
+                theta = theta_w
+                #for theta in theta_v_list:
                 for idx, num_noise in enumerate(num_noise_list):
+                    num_samples = num_noise
+                    num_x0_samples = num_noise
                     print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ theta_w : ", theta_w, "/ theta_v : ", theta)
                     np.random.seed(seed) # fix Random seed!
                     print("--------------------------------------------")
@@ -247,7 +264,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                         mu_hat_, Sigma_hat_ = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
                         # Nominal Noise distribution
                         v_mean_hat_, M_hat_ = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                        M_hat_ = M_hat_ + 1e-8*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
+                        M_hat_ = M_hat_ + 1e-6*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
                         
                         x0_mean_hat.append(x0_mean_hat_)
                         x0_cov_hat.append(x0_cov_hat_)
@@ -261,9 +278,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     system_data = (A, B, C, Q, Qf, R, M)
                     
                     #-------Perform n  independent simulations and summarize the results-------
-                    output_lqg_list = []
-                    output_wdrc_list = []
-                    output_drce_list = []
                     
                     
                     # Parallelize the simulations
@@ -296,47 +310,70 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     output_wdrc = np.empty(num_sim, dtype=object)
                     output_lqg = np.empty(num_sim, dtype=object)
                     drce_cert = np.empty(num_sim)
-                    os_sample_size = 100
+                    os_sample_size = 1000
                     
                     
-                    #----------------------------
+                    # Parallel execution for DRCE
                     print("Running DRCE Forward step ...")
-                    #Perform state estimation and apply the controller
-                    for i in range(num_sim):
-                        drce_cert[i] = drce[i].objective(drce[i].lambda_)*drce[i].T
-                        output_drce_sample = []
-                        for j in range(os_sample_size):
-                            output_drce_ = drce[i].forward()
-                            output_drce_sample.append(output_drce_)
-                        output_drce[i] = output_drce_sample
-                        
-                    #----------------------------
-                    print("Running WDRC Forward step ...")
-                    #Perform state estimation and apply the controller
-                    for i in range(num_sim):
-                        output_wdrc_sample = []
-                        for j in range(os_sample_size):
-                            output_wdrc_ = wdrc[i].forward()
-                            output_wdrc_sample.append(output_wdrc_)
-                        output_wdrc[i] = output_wdrc_sample
+                    results_drce = Parallel(n_jobs=-1)(delayed(drce_forward_step)(drce, i, os_sample_size) for i in range(num_sim))
+                    for i, (cert, samples) in enumerate(results_drce):
+                        drce_cert[i] = cert
+                        output_drce[i] = samples
                     
-                    #----------------------------
+                    # Parallel execution for WDRC
+                    print("Running WDRC Forward step ...")
+                    results_wdrc = Parallel(n_jobs=-1)(delayed(wdrc_forward_step)(wdrc, i, os_sample_size) for i in range(num_sim))
+                    for i, samples in enumerate(results_wdrc):
+                        output_wdrc[i] = samples
+                    
+                    # Parallel execution for LQG
                     print("Running LQG Forward step ...")
-                    #Perform state estimation and apply the controller
-                    for i in range(num_sim):
-                        output_lqg_sample = []
-                        for j in range(os_sample_size):
-                            output_lqg_ = lqg[i].forward()
-                            output_lqg_sample.append(output_lqg_)
-                        output_lqg[i] = output_lqg_sample
+                    results_lqg = Parallel(n_jobs=-1)(delayed(lqg_forward_step)(lqg, i, os_sample_size) for i in range(num_sim))
+                    for i, samples in enumerate(results_lqg):
+                        output_lqg[i] = samples
+    
+                    # #----------------------------
+                    # print("Running DRCE Forward step ...")
+                    # #Perform state estimation and apply the controller
+                    # for i in range(num_sim):
+                    #     drce_cert[i] = drce[i].objective(drce[i].lambda_)
+                    #     output_drce_sample = []
+                    #     output_drce_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(drce, i) for _ in range(os_sample_size))
+                    #     # for j in range(os_sample_size):
+                    #     #     output_drce_ = drce[i].forward()
+                    #     #     output_drce_sample.append(output_drce_)
+                    #     output_drce[i] = output_drce_sample
+                        
+                    # #----------------------------
+                    # print("Running WDRC Forward step ...")
+                    # #Perform state estimation and apply the controller
+                    # for i in range(num_sim):
+                    #     output_wdrc_sample = []
+                    #     output_wdrc_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(wdrc, i) for _ in range(os_sample_size))
+
+                    #     # for j in range(os_sample_size):
+                    #     #     output_wdrc_ = wdrc[i].forward()
+                    #     #     output_wdrc_sample.append(output_wdrc_)
+                    #     output_wdrc[i] = output_wdrc_sample
+                    
+                    # #----------------------------
+                    # print("Running LQG Forward step ...")
+                    # #Perform state estimation and apply the controller
+                    # for i in range(num_sim):
+                    #     output_lqg_sample = []
+                    #     output_lqg_sample = Parallel(n_jobs=-1)(delayed(sample_forward)(lqg, i) for _ in range(os_sample_size))
+                    #     # for j in range(os_sample_size):
+                    #     #     output_lqg_ = lqg[i].forward()
+                    #     #     output_lqg_sample.append(output_lqg_)
+                    #     output_lqg[i] = output_lqg_sample
                 
                     #-- Out-of-sample performance result SAVE -- #
                 
-                    J_LQG_list, J_WDRC_list, J_DRCE_list= [], [], []
                     J_LQG_OS_list, J_WDRC_OS_list, J_DRCE_OS_list= [], [], []
                     #lqg-----------------------
                     for i in range(num_sim):
-                        for out in output_lqg_sample:
+                        J_LQG_list = []
+                        for out in output_lqg[i]:
                             J_LQG_list.append(out['cost'][0])
                         
                         # Average cost when using lqg[i] controller   
@@ -351,7 +388,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     
                     #wdrc-----------------------
                     for i in range(num_sim):
-                        for out in output_wdrc_sample:
+                        J_WDRC_list = []
+                        for out in output_wdrc[i]:
                             J_WDRC_list.append(out['cost'][0])
                         
                         # Average cost when using wdrc[i] controller   
@@ -367,7 +405,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     DRCE_prob = np.empty(num_sim)
                     #drce-----------------------
                     for i in range(num_sim):
-                        for out in output_drce_sample:
+                        J_DRCE_list = []
+                        for out in output_drce[i]:
                             J_DRCE_list.append(out['cost'][0])
                         
                         # Average cost when using drce[i] controller   
