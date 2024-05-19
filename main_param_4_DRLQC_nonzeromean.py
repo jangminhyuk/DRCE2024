@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates data for Figure 1 (a)
+# Nonzeromean U-Quadratic distributions
+# 4 method implemented (LQG, WDRC, DRLQC, WDR-CE)
+
 import numpy as np
 import argparse
 from controllers.LQG import LQG
 from controllers.WDRC import WDRC
 from controllers.DRCE import DRCE
 from controllers.DRLQC import DRLQC
-from controllers.inf_LQG import inf_LQG
-from controllers.inf_WDRC import inf_WDRC
-from controllers.inf_DRCE import inf_DRCE
 
 import os
 import pickle
@@ -97,17 +98,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     
     lambda_ = 10
     seed = 2024 # Random seed
-    # --- for DRLQC --- #
-    iter_max = 500
+    # --- Parameter for DRLQC --- #
     tol = 1e-3
-    # delta = 0.95
-    # T = 10
-    # replications = 10
     # --- ----- --------#
     noisedist = [noise_dist1]
-    #noisedist = ["normal", "uniform", "quadratic"]
     num_noise_list = [num_noise_samples]
-    theta_w = 1.0 # will not be used for this file!!!
     
     # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean =[], [], [], []
@@ -120,8 +115,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     A = 0.2*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = C = Q = R = Qf = np.eye(10) 
     #----------------------------
-    if infinite: 
-        T = 100 # Test for longer horizon if infinite (Can be erased!)
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
     theta_v_list = [5.0, 10.0, 15.0] # radius of noise ambiguity set
@@ -131,12 +124,10 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     else:
         theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
-    lambda_list = [6, 20, 30, 40, 50] # disturbance distribution penalty parameter
-    #theta_v_list = [0.3]
-    #lambda_list = [6]
-    num_x0_samples = 15 #  x0 samples 
+    lambda_list = [10, 20, 30, 40, 50] # disturbance distribution penalty parameter
+    num_x0_samples = 15 #  N_x0 
     theta_x0 = 2.0 # radius of initial state ambiguity set
-    use_lambda = False # If use_lambda is True, we will use lambda_list. If use_lambda is False, we will use theta_w_list
+    use_lambda = False # If use_lambda=True, we will use lambda_list. If use_lambda=False, we will use theta_w_list
     if use_lambda:
         dist_parameter_list = lambda_list
     else:
@@ -146,7 +137,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         for dist_parameter in dist_parameter_list:
             for theta in theta_v_list:
                 for num_noise in num_noise_list:
-                    
                     np.random.seed(seed) # fix Random seed!
                     print("--------------------------------------------")
                     print("number of noise sample : ", num_noise)
@@ -157,8 +147,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     else:
                         theta_w = dist_parameter
                         print("disturbance : ", dist, "/ noise : ", noise_dist, "/ num_noise : ", num_noise, "/ theta_w: ", theta_w, "/ theta_v : ", theta)
-                    
-                 
+
                     if use_lambda:
                         path = "./results/{}_{}/finite/multiple/DRLQC/params_lambda/".format(dist, noise_dist)
                     else:
