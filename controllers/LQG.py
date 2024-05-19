@@ -20,9 +20,9 @@ class LQG:
         self.x0_mean_hat = x0_mean_hat
         self.x0_cov_hat = x0_cov_hat
         self.mu_hat = mu_hat
-        self.Sigma_hat = Sigma_hat
+        self.Sigma_hat = Sigma_hat 
         self.mu_w = mu_w
-        self.mu_v = mu_v # true
+        self.mu_v = mu_v
         self.Sigma_w = Sigma_w
         
         

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates Figure 1(b)
 
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import pickle
 
-def summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01, avg_time_drce, std_time_drce, dist, noise_dist, infinite, path):
+def summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01, avg_time_drce, std_time_drce, dist, noise_dist, path):
 
     #horizon_list
     t = np.array([10,20,30,40,50,60,70,80,90,100,200,300,400])
@@ -63,7 +64,6 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform)
     parser.add_argument('--theta', required=False, default="0.1")
-    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     args = parser.parse_args()
     
     
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     std_time_drlqc_0_01 = pickle.load(std_time_drlqc_0_01_file)
     std_time_drlqc_0_01_file.close()
     
-    summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01,  avg_time_drce, std_time_drce, args.dist, args.noise_dist, args.infinite ,path)
+    summarize_noise(avg_time_drlqc_0_0001, std_time_drlqc_0_0001,avg_time_drlqc_0_001, std_time_drlqc_0_001,avg_time_drlqc_0_01, std_time_drlqc_0_01,  avg_time_drce, std_time_drce, args.dist, args.noise_dist, path)

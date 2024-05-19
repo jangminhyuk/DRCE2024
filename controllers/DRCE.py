@@ -7,15 +7,15 @@ from scipy.optimize import minimize
 import cvxpy as cp
 import scipy
 
-# Distributionally Robust Control and Estimation
+# Wasserstein Distributionally Robust Control and Estimation (WDR-CE)
 class DRCE:
     def __init__(self, lambda_, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
         self.noise_dist = noise_dist
         self.T = T
         self.A, self.B, self.C, self.Q, self.Qf, self.R, self.M = system_data
-        self.v_mean_hat = v_mean_hat
-        self.M_hat = M_hat
+        self.v_mean_hat = v_mean_hat # Nominal noise mean
+        self.M_hat = M_hat # Nominal noise covariance
         self.nx = self.B.shape[0]
         self.nu = self.B.shape[1]
         self.ny = self.C.shape[0]
@@ -52,8 +52,7 @@ class DRCE:
             self.true_v_init = self.uniform(self.v_max, self.v_min) #observation noise
         elif self.noise_dist=="quadratic":
             self.true_v_init = self.quadratic(self.v_max, self.v_min) #observation noise
-        self.previousM = self.M_hat
-        self.previousX = self.x0_cov_hat
+        
         self.theta_w = theta_w
         self.theta_v = theta_v
         self.theta_x0 = theta_x0
@@ -67,7 +66,6 @@ class DRCE:
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
             
-        #print(self.lambda_)
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))
         self.S = np.zeros((self.T+1, self.nx, self.nx))
@@ -122,9 +120,7 @@ class DRCE:
         S_xy = np.zeros((self.T+1, self.nx, self.ny))
         S_yy = np.zeros((self.T+1, self.ny, self.ny))
         sigma_wc = np.zeros((self.T, self.nx, self.nx))
-        #print(self.v_mean_hat[0])
           
-        #x_cov[0] = self.kalman_filter_cov(self.M_hat[0], self.x0_cov)
         x_cov[0], S_xx[0], S_xy[0], S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
         for t in range(0, self.T-1):
             x_cov[t+1], S_xx[t+1], S_xy[t+1], S_yy[t+1], sigma_wc[t], z_tilde[t] = self.DR_kalman_filter_cov(P[t+1], S[t+1], self.M_hat[t+1], x_cov[t], self.Sigma_hat[t], penalty)
@@ -133,7 +129,6 @@ class DRCE:
         x0_mean = self.DR_kalman_filter(self.v_mean_hat[0], self.M_hat[0], self.x0_mean_hat, y, S_xx[0], S_xy[0], S_yy[0]) #initial state estimation
         obj_val = penalty*self.T*self.theta_w**2 + (self.x0_mean_hat.T @ P[0] @ self.x0_mean_hat)[0][0] + 2*(r[0].T @ self.x0_mean_hat)[0][0] + z[0][0] + np.trace(P[0] @ S_xx[0]) + np.trace(S[0] @ x_cov[0]) + z_tilde.sum()
 
-        #print(f'obj for theta_w={self.theta_w}, theta_v={self.theta_v}, theta_x0={self.theta_x0}, lambda={penalty}: {obj_val}')
         return obj_val/self.T       
         
     def binarysearch_infimum_penalty_finite(self):
@@ -263,26 +258,11 @@ class DRCE:
         
         sol = prob.variables()
         #['V', 'Sigma_wc', 'Y', 'X_pred', 'M_test', 'Z']
-        #print(sol)
+        
         S_xx_opt = sol[3].value
         S_xy_opt = S_xx_opt @ self.C.T
         S_yy_opt = self.C @ S_xx_opt @ self.C.T + sol[4].value
         
-        # if np.min(np.linalg.eigvals( self.previousM - sol[4].value )>0):
-        #     print("Previous Mopt is larger !")
-        # if np.min(np.linalg.eigvals( sol[4].value - self.previousM)>0):
-        #     print("Next Mopt is larger !")
-        # if np.min(np.linalg.eigvals( self.previousX - sol[0].value )>0):
-        #     print("Previous X_post is larger !")
-        # if np.min(np.linalg.eigvals(  sol[0].value - self.previousX )>0):
-        #     print("Next X_post is larger !")
-        # print("M_opt norm : ", np.linalg.norm(sol[4].value))
-        #print("X_post norm : " , np.linalg.norm(sol[0].value))
-        # self.previousX = sol[0].value
-        # self.previousM = sol[4].value
-        #S_opt = S.value
-        #print("X_post norm : " , np.linalg.norm(sol[0].value))
-        #print("Kalman gain norm : ", np.linalg.norm(S_xy_opt @ np.linalg.inv(S_yy_opt)))
         Sigma_wc_opt = sol[1].value
         cost = prob.value
         return  S_xx_opt, S_xy_opt, S_yy_opt, Sigma_wc_opt, cost
@@ -321,14 +301,10 @@ class DRCE:
                          ]) >> 0,
                 X>>0,
                 X0>>0,
-                M0>>0,
-                #N>>0,
-                #K>>0
+                M0>>0
                 ]
         
         prob = cp.Problem(obj, constraints)
-
-
         return prob
     
 
@@ -344,7 +320,7 @@ class DRCE:
         prob.solve(solver=cp.MOSEK)
         
         if prob.status in ["infeasible", "unbounded"]:
-            print(prob.status, 'False in DRKF combined initial!!!!!!!!!!!!!')
+            print(prob.status, 'False in DRCE initial!!!!!!!!!!!!!')
         
         sol = prob.variables()
         S_xx_opt = sol[0].value
@@ -374,7 +350,7 @@ class DRCE:
         S_xx, S_xy, S_yy, Sigma_wc, cost = self.solve_DR_sdp(self.DR_sdp, P, S, M_hat, X_cov, Sigma_hat, theta, Lambda)
         
         X_cov_new = S_xx - S_xy @ np.linalg.inv(S_yy) @ S_xy.T
-        #print("Xcov : ",np.linalg.norm(X_cov_new))
+        
         return X_cov_new, S_xx, S_xy, S_yy, Sigma_wc, cost
     
     def DR_kalman_filter_cov_initial(self, M_hat, X_cov): #DRKF !!
@@ -429,9 +405,8 @@ class DRCE:
         self.S_xy = np.zeros((self.T+1, self.nx, self.ny))
         self.S_yy = np.zeros((self.T+1, self.ny, self.ny))
         self.sigma_wc = np.zeros((self.T, self.nx, self.nx))
-        #print(self.v_mean_hat[0])
         self.x_cov[0], self.S_xx[0], self.S_xy[0], self.S_yy[0], _= self.DR_kalman_filter_cov_initial(self.M_hat[0], self.x0_cov_hat)
-        #print("x_cov[0] : ", self.x_cov[0])
+        
         for t in range(self.T):
             print("DRCE Offline step : ",t,"/",self.T)
             self.x_cov[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], self.sigma_wc[t], _ = self.DR_kalman_filter_cov(self.P[t+1], self.S[t+1], self.M_hat[t+1], self.x_cov[t], self.Sigma_hat[t], self.lambda_)
@@ -496,10 +471,10 @@ class DRCE:
             #Update the state estimation (using the worst-case mean and covariance)
             x_mean[t+1] = self.DR_kalman_filter(self.v_mean_hat[t+1], self.M_hat[t+1], x_mean[t], y[t+1], self.S_xx[t+1], self.S_xy[t+1], self.S_yy[t+1], mu_wc[t], u=u[t])
 
-        self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
+        #State estimation error MSE
+        self.J_mse = np.zeros(self.T + 1) 
         #Collect Estimation MSE 
         for t in range(self.T):
-            #print("DRCE S[",t,"] : ", np.linalg.norm(self.S[t]))
             self.J_mse[t] = (x_mean[t]-x[t]).T@(self.S[t])@(x_mean[t]-x[t])
 
         #Compute the total cost

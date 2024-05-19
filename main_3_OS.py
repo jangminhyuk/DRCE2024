@@ -122,8 +122,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     #theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     theta_w_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0] # radius of noise ambiguity set
     theta_x0 = 0.5
-    theta_v_list = [0.5]
-    num_noise_list = [5, 10, 15]
+    theta_v_list = [2.0]
+    num_noise_list = [10, 15, 20]
     # Save lambda list
     WDRC_lambda, DRCE_lambda = [],[]
     # if use_lambda == True and dist=="normal":

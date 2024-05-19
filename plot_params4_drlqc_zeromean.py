@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates Figure 2(a), (b)
+
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -13,111 +15,6 @@ import matplotlib.ticker as ticker
 from matplotlib import cm
 from scipy.interpolate import interp1d
 
-def summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdrc_lambda_values, wdrc_theta_v_values, wdrc_cost_values , drce_lambda_values, drce_theta_v_values, drce_cost_values, drlqc_lambda_values, drlqc_theta_v_values, drlqc_cost_values,  dist, noise_dist, infinite, use_lambda, path):
-    
-    surfaces = []
-    labels = []
-    # Create 3D plot
-    plt.rcParams.update({
-    "text.usetex": True,
-    "text.latex.preamble": r"\usepackage{amsmath}",
-    })
-    fig = plt.figure(figsize=(8, 6))
-    ax = fig.add_subplot(111, projection='3d')
-    
-    # -------------------
-    # LQG
-    # Interpolate cost values for smooth surface - LQG
-    lambda_grid_lqg, theta_v_grid_lqg = np.meshgrid(
-        np.linspace(min(lqg_lambda_values), max(lqg_lambda_values), 100),
-        np.linspace(min(lqg_theta_v_values), max(lqg_theta_v_values), 100)
-    )
-    cost_grid_lqg = griddata(
-        (lqg_lambda_values, lqg_theta_v_values), lqg_cost_values,
-        (lambda_grid_lqg, theta_v_grid_lqg), method='cubic'
-    )
-
-    # Plot data points - LQG
-    #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
-
-    # Plot smooth surface - LQG
-    surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
-    surfaces.append(surface_lqg)
-    labels.append('LQG')
-    #-------------------------
-    
-    # Repeat the process for WDRC
-    # Interpolate cost values for smooth surface - WDRC
-    lambda_grid_wdrc, theta_v_grid_wdrc = np.meshgrid(
-    np.linspace(min(wdrc_lambda_values), max(wdrc_lambda_values), 100),
-    np.linspace(min(wdrc_theta_v_values), max(wdrc_theta_v_values), 100)
-    )
-    cost_grid_wdrc = griddata(
-        (wdrc_lambda_values, wdrc_theta_v_values), wdrc_cost_values,
-        (lambda_grid_wdrc, theta_v_grid_wdrc), method='linear'  # Use linear interpolation
-    )
-
-    # Plot data points - WDRC
-    #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
-
-    # Plot smooth surface - WDRC
-    surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC+MMSE')
-    surfaces.append(surface_wdrc)
-    labels.append('WDRC+MMSE')
-    #--------------
-    #ax.scatter(drkf_lambda_values, drkf_theta_values, drkf_cost_values, label='DRKF')
-
-    # Interpolate cost values for smooth surface - DRKF
-    lambda_grid_drlqc, theta_v_grid_drlqc = np.meshgrid(
-        np.linspace(min(drlqc_lambda_values), max(drlqc_lambda_values), 100),
-        np.linspace(min(drlqc_theta_v_values), max(drlqc_theta_v_values), 100)
-    )
-    cost_grid_drlqc = griddata(
-        (drlqc_lambda_values, drlqc_theta_v_values), drlqc_cost_values,
-        (lambda_grid_drlqc, theta_v_grid_drlqc), method='cubic'
-    )
-    
-    # Plot smooth surface - DCE
-    surface_drlqc = ax.plot_surface(lambda_grid_drlqc, theta_v_grid_drlqc, cost_grid_drlqc, alpha=0.6, color='yellow', label='DRLQC')
-    surfaces.append(surface_drlqc)
-    labels.append('DRLQC')
-    
-    #---------------------------
-    # Interpolate cost values for smooth surface - DRKF
-    lambda_grid_drce, theta_v_grid_drce = np.meshgrid(
-        np.linspace(min(drce_lambda_values), max(drce_lambda_values), 100),
-        np.linspace(min(drce_theta_v_values), max(drce_theta_v_values), 100)
-    )
-    cost_grid_drce = griddata(
-        (drce_lambda_values, drce_theta_v_values), drce_cost_values,
-        (lambda_grid_drce, theta_v_grid_drce), method='cubic'
-    )
-    
-    # Plot smooth surface - DCE
-    surface_drce = ax.plot_surface(lambda_grid_drce, theta_v_grid_drce, cost_grid_drce, alpha=0.6, color='green', label='WDR-CE')
-    surfaces.append(surface_drce)
-    labels.append('WDR-CE')
-    
-    
-    ax.legend(handles=surfaces, labels=labels)
-    
-    # Set labels
-    ax.set_xlabel(r'$\lambda$', fontsize=16)
-    ax.set_ylabel(r'$\theta_v$', fontsize=16)
-    ax.set_zlabel(r'Total Cost', fontsize=16, rotation=90, labelpad=3)
-    ax.zaxis.set_rotate_label(False)
-    a = ax.zaxis.label.get_rotation()
-    if a<180:
-        a += 90
-    ax.zaxis.label.set_rotation(a)
-    a = ax.zaxis.label.get_rotation()
-    ax.set_zlabel(r'Total Cost', fontsize=16, labelpad=3)
-    ax.view_init(elev=20, azim=-65)
-    
-    plt.show()
-    fig.savefig(path + 'params_{}_{}.pdf'.format(dist, noise_dist), dpi=300, bbox_inches="tight", pad_inches=0.3)
-    #plt.clf()
-    
 def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, drlqc_theta_w_values, drlqc_theta_v_values, drlqc_cost_values, dist, noise_dist, infinite, use_lambda, path):
     
     surfaces = []
@@ -145,15 +42,11 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
         (theta_w_grid_lqg, theta_v_grid_lqg), method='cubic'
     )
 
-    # Plot data points - LQG
-    #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
-
     # Plot smooth surface - LQG
     surface_lqg =ax.plot_surface(theta_w_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.5, color='red', label='LQG')
     surfaces.append(surface_lqg)
     labels.append('LQG')
     #-------------------------
-    
     # Repeat the process for WDRC
     # Interpolate cost values for smooth surface - WDRC
     theta_w_grid_wdrc, theta_v_grid_wdrc = np.meshgrid(
@@ -165,16 +58,13 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
         (theta_w_grid_wdrc, theta_v_grid_wdrc), method='linear'  # Use linear interpolation
     )
 
-    # Plot data points - WDRC
-    #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
-
     # Plot smooth surface - WDRC
     surface_wdrc =ax.plot_surface(theta_w_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.6, color='blue', label='WDRC')
     surfaces.append(surface_wdrc)
     labels.append('WDRC [3]')
     #--------------
 
-    # Interpolate cost values for smooth surface - WDRLQC
+    # Interpolate cost values for smooth surface - DRLQC
     theta_w_grid_drlqc, theta_v_grid_drlqc = np.meshgrid(
         np.linspace(min(drlqc_theta_w_values), max(drlqc_theta_w_values), 100),
         np.linspace(min(drlqc_theta_v_values), max(drlqc_theta_v_values), 100)
@@ -190,10 +80,7 @@ def summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,w
     labels.append('DRLQC [58]')
     
     #--------------
-    # Plot DRKF data points
-    #ax.scatter(drkf_lambda_values, drkf_theta_values, drkf_cost_values, label='DRKF')
-
-    # Interpolate cost values for smooth surface - DRKF
+    # Interpolate cost values for smooth surface - DRCE
     theta_w_grid_drce, theta_v_grid_drce = np.meshgrid(
         np.linspace(min(drce_theta_w_values), max(drce_theta_w_values), 100),
         np.linspace(min(drce_theta_v_values), max(drce_theta_v_values), 100)
@@ -235,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
     parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
     parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
-    parser.add_argument('--use_lambda', required=False, action="store_true") #use lambda results if flagged
+    parser.add_argument('--use_lambda', required=False, action="store_true") #DEPRECATED !! (use lambda results if flagged)
     args = parser.parse_args()
     
     
@@ -264,18 +151,11 @@ if __name__ == "__main__":
     lqg_lambda_values = []
     lqg_theta_v_values = []
     lqg_cost_values = []
-    # theta_v_list = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
-    # lambda_list = [ 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
     # TODO : Modify the theta_v_list and lambda_list below to match your experiments!!! 
-    # theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    # lambda_list = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
     
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] # radius of noise ambiguity set
-    #theta_v_list = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
-    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    #theta_v_list = [5.0, 10.0, 15.0]
-    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
+    theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of disturbance ambiguity set
     
     if args.dist=='normal':
         lambda_list = [12, 15, 20, 25, 30, 35, 40, 45, 50] # disturbance distribution penalty parameter
@@ -425,8 +305,5 @@ if __name__ == "__main__":
     lqg_theta_v_values = np.array(lqg_theta_v_values)
     lqg_cost_values = np.array(lqg_cost_values)
     
-    if args.use_lambda:
-        summarize_lambda(lqg_lambda_values, lqg_theta_v_values, lqg_cost_values ,wdrc_lambda_values, wdrc_theta_v_values, wdrc_cost_values , drce_lambda_values, drce_theta_v_values, drce_cost_values, drlqc_lambda_values, drlqc_theta_v_values, drlqc_cost_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
-    else:
-        summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, drlqc_theta_w_values, drlqc_theta_v_values, drlqc_cost_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
+    summarize_theta_w(lqg_theta_w_values, lqg_theta_v_values, lqg_cost_values ,wdrc_theta_w_values, wdrc_theta_v_values, wdrc_cost_values , drce_theta_w_values, drce_theta_v_values, drce_cost_values, drlqc_theta_w_values, drlqc_theta_v_values, drlqc_cost_values, args.dist, args.noise_dist, args.infinite, args.use_lambda, path)
 

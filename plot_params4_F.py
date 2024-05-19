@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates Figure 3(a), (b)
+
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -24,26 +26,6 @@ def summarize_lambda(wdrc_drkf_lambda_values, wdrc_drkf_theta_v_values, wdrc_drk
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
     
-    # -------------------
-    # # LQG
-    # # Interpolate cost values for smooth surface - LQG
-    # lambda_grid_wdrc_drkf, theta_v_grid_wdrc_drkf = np.meshgrid(
-    #     np.linspace(min(wdrc_drkf_lambda_values), max(wdrc_drkf_lambda_values), 100),
-    #     np.linspace(min(wdrc_drkf_theta_v_values), max(wdrc_drkf_theta_v_values), 100)
-    # )
-    # cost_grid_wdrc_drkf = griddata(
-    #     (wdrc_drkf_lambda_values, wdrc_drkf_theta_v_values), wdrc_drkf_cost_values,
-    #     (lambda_grid_wdrc_drkf, theta_v_grid_wdrc_drkf), method='cubic'
-    # )
-
-    # Plot data points - LQG
-    #ax.scatter(lqg_lambda_values, lqg_theta_values, lqg_cost_values, label='LQG')
-
-    # Plot smooth surface - LQG
-    #surface_lqg =ax.plot_surface(lambda_grid_lqg, theta_v_grid_lqg, cost_grid_lqg, alpha=0.4, color='red', label='LQG')
-    #surfaces.append(surface_lqg)
-    #labels.append('LQG')
-    #-------------------------
     
     # Repeat the process for WDRC
     # Interpolate cost values for smooth surface - WDRC
@@ -56,16 +38,11 @@ def summarize_lambda(wdrc_drkf_lambda_values, wdrc_drkf_theta_v_values, wdrc_drk
         (lambda_grid_wdrc, theta_v_grid_wdrc), method='linear'  # Use linear interpolation
     )
 
-    # Plot data points - WDRC
-    #ax.scatter(wdrc_lambda_values, wdrc_theta_values, wdrc_cost_values, label='WDRC')
-
     # Plot smooth surface - WDRC
     surface_wdrc =ax.plot_surface(lambda_grid_wdrc, theta_v_grid_wdrc, cost_grid_wdrc, alpha=0.5, color='blue', label='WDRC')
     surfaces.append(surface_wdrc)
     labels.append('WDRC [3]')
     #--------------
-    #ax.scatter(drkf_lambda_values, drkf_theta_values, drkf_cost_values, label='DRKF')
-
     # Interpolate cost values for smooth surface - WDRC DRKF
     lambda_grid_wdrc_drkf, theta_v_grid_wdrc_drkf = np.meshgrid(
         np.linspace(min(wdrc_drkf_lambda_values), max(wdrc_drkf_lambda_values), 100),
@@ -81,8 +58,6 @@ def summarize_lambda(wdrc_drkf_lambda_values, wdrc_drkf_theta_v_values, wdrc_drk
     surfaces.append(surface_wdrc_drkf)
     labels.append('WDRC + DRKF [54]')
     #--------------
-    #ax.scatter(drkf_lambda_values, drkf_theta_values, drkf_cost_values, label='DRKF')
-
     # Interpolate cost values for smooth surface - DRKF
     lambda_grid_drcmmse, theta_v_grid_drcmmse = np.meshgrid(
         np.linspace(min(drcmmse_lambda_values), max(drcmmse_lambda_values), 100),

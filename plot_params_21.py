@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates Figure 6(a),(b)
+
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse

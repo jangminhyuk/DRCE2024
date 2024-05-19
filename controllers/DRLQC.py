@@ -8,6 +8,7 @@ from controllers.function_utils import *
 import cvxpy as cp
 import scipy
 import control
+
 #from generator_utils import random_pd_matrix_generator
 from controllers.function_utils import (
     calculate_P,
@@ -19,8 +20,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Controller from Taşkesen, Bahar, et al. "Distributionally Robust Linear Quadratic Control." arXiv preprint arXiv:2305.17037 (2023).
-# https://github.com/RAO-EPFL/DR-Control 
+# DRLQC algorithm : Downloaded from the authors github
 class DRLQC:
     def __init__(self, theta_w, theta_v, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat,x0_mean_hat, x0_cov_hat, tol):
         self.dist = dist
@@ -48,8 +48,8 @@ class DRLQC:
         self.P_ = calculate_P(A=self.A_big, B=self.B_big, Q=self.Q_big, R=self.R_big, T=self.T)
         
         self.v_mean_hat = v_mean_hat
-        self.V_hat = V_hat
-        self.W_hat = W_hat
+        self.V_hat = V_hat # Nominal noise covariances
+        self.W_hat = W_hat # Nominal disturbance covariances
         self.V_opt = np.zeros_like(V_hat)
         self.W_opt = np.zeros_like(W_hat)
         self.tol = tol
@@ -190,18 +190,19 @@ class DRLQC:
         return x.T
     
     def solve_sdp(self):
+        # Calculate Worst-case covariance matrices
         print("Solving DRLQC SDP . . . (Frank-Wolfe Algorithm)")
         offline_start = time.time()
-        # FW
+        # FW : Frank-Wolfe Algorithm
         obj_vals_fw, duality_gap_fw, X0_k_fw, W_k_fw, V_k_fw = FW(
         X0_k=self.x0_cov_hat, W_k=self.W_hat, V_k=self.V_hat, iter_max=self.iter_max, delta=self.delta, params=self.params
         )
         self.V_opt = V_k_fw
-        #print("V_opt shape : ",self.V_opt.shape)
         self.W_opt = W_k_fw
         self.X0_opt = X0_k_fw
-        # now, solve standard LQG problem using this worst case V, W, and X0
         self.offline_time = time.time() - offline_start
+        
+        # now, solve standard LQG problem using this worst case V, W, and X0
       
     def kalman_filter_cov(self, M_hat, P, P_w=None):
         #Performs state estimation based on the current state estimate, control input and new observation
@@ -213,7 +214,6 @@ class DRLQC:
             P_ = self.A @ P @ self.A.T + P_w
 
         #Measurement update
-        
         temp = np.linalg.solve(self.C @ P_ @ self.C.T + M_hat, self.C @ P_)
         P_new = P_ - P_ @ self.C.T @ temp
         return P_new
@@ -230,7 +230,6 @@ class DRLQC:
         P_ = self.C @ P @ self.C.T + M_hat
         #Measurement update
         resid = y - (self.C @ x_ + v_mean_hat)
-
         temp = np.linalg.solve(M_hat, resid)
         x_new = x_ + P @ self.C.T @ temp
         return x_new
@@ -265,7 +264,7 @@ class DRLQC:
         
         self.x_cov = np.zeros((self.T+1, self.nx, self.nx))
         self.x_cov[0] = self.kalman_filter_cov(self.V_opt[:,:,0], self.X0_opt)
-        #print("x0_opt : ", self.X0_opt)
+       
         for t in range(self.T):
             self.x_cov[t+1] = self.kalman_filter_cov(self.V_opt[:,:,t+1], self.x_cov[t], self.W_opt[:,:,t])  
         
@@ -322,14 +321,12 @@ class DRLQC:
             y[t+1] = self.get_obs(x[t+1], true_v)
 
             #Update the state estimation
-            #print(self.V_opt[:,:,t+1])
             if t<self.T-1:
                 x_mean[t+1] = self.kalman_filter(self.v_mean_hat[t+1], self.V_opt[:,:,t+1], x_mean[t], self.x_cov[t+1], y[t+1], self.mu_hat[t], u=u[t])
         
         
         self.J_mse = np.zeros(self.T + 1) # State estimation error MSE
-        #print("x[0] :", x[0])
-        #print("x_mean[0] : ", x_mean[0])
+        
         #Collect Estimation MSE 
         for t in range(self.T-1):
             self.J_mse[t] = (x_mean[t]-x[t]).T@(x_mean[t]-x[t])

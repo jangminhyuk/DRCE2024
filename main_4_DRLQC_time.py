@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file generates data for Figure 1 (b)
+# Computation Time plot
+# Gaussian(Normal) distributions
+# 3 method implemented (WDR-CE, DRLQC(1e-3), DRLQC(1e-4))
+
 import numpy as np
 import argparse
 from controllers.LQG import LQG
 from controllers.WDRC import WDRC
 from controllers.DRCE import DRCE
 from controllers.DRLQC import DRLQC
-from controllers.DRLQC import DRLQC
-from controllers.inf_LQG import inf_LQG
-from controllers.inf_WDRC import inf_WDRC
-from controllers.inf_DRCE import inf_DRCE
 
 import os
 import pickle
@@ -98,7 +99,7 @@ def save_data(path, data):
     pickle.dump(data, output)
     output.close()
 
-def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_results, noise_plot_results, infinite):
+def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     #noise_plot_results = True
     seed = 2024 # Random seed !  any value
     
@@ -106,14 +107,9 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     tol = 1e-3
     # --- ----- --------#
     
-    if noise_plot_results:
-        num_noise_list = [5, 10, 15, 20, 25, 30, 35, 40]
-    else:
-        num_noise_list = [num_noise_samples]
+    num_noise_list = [num_noise_samples]
     num_x0_samples = 15 # num x0 samples 
-    # for the noise_plot_results!!
-    output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean=[], [], [], []
-    output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
+    
     #-------Initialization-------
     nx = 10 #state dimension
     nu = 10 #control input dimension
@@ -122,13 +118,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
     A = 0.2*(np.eye(nx) + np.triu(temp, 1) - np.triu(temp, 2))
     B = Q = R = Qf = np.eye(10)
     C = np.eye(10)
-    #C = np.hstack([np.eye(9), np.zeros((9,1))])
     #----------------------------
     # change True to False if you don't want to use given lambda
     use_lambda = True
     lambda_ = 10 # hyperparameter
     noisedist = [noise_dist1]
-    #noisedist = ["normal", "uniform", "quadratic"]
     #theta_v_list  # radius of noise ambiguity set
     #theta_w_list  # theta_w have no effect if the parameter "use_lambda = True"
     if dist == "normal":
@@ -139,10 +133,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
         theta_w_list = [1.0]
         theta_v_list = [2.0]
         theta_x0 = 2.0
-    else:
-        theta_w_list = [2.0]
-        theta_v_list = [5.0]
-        theta_x0 = 5.0
     
     horizon_list = [10,20,30,40,50,60,70,80,90,100,200,300,400]
     
@@ -169,10 +159,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 print("--------------------------------------------")
                 print("number of noise sample : ", num_noise)
                 print("number of disturbance sample : ", num_samples)
-                if infinite:
-                    path = "./results/{}_{}/infinite/multiple/DRLQC".format(dist, noise_dist)
-                else:
-                    path = "./results/{}_{}/finite/multiple/DRLQC".format(dist, noise_dist)    
+               
+                path = "./results/{}_{}/finite/multiple/DRLQC".format(dist, noise_dist)    
                 if not os.path.exists(path):
                     os.makedirs(path)
             
@@ -214,24 +202,17 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     
                     
                 #-------Estimate the nominal distribution-------
-                if infinite:
-                    # Nominal initial state distribution
-                    x0_mean_hat, x0_cov_hat = gen_sample_dist_inf(dist, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
-                    # Nominal Disturbance distribution
-                    mu_hat, Sigma_hat = gen_sample_dist_inf(dist, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                    # Nominal Noise distribution
-                    v_mean_hat, M_hat = gen_sample_dist_inf(noise_dist, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                else:
-                    # Nominal initial state distribution
-                    x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
-                    # Nominal Disturbance distribution
-                    mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                    # Nominal Noise distribution
-                    v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                # Nominal initial state distribution
+                x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
+                # Nominal Disturbance distribution
+                mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
+                # Nominal Noise distribution
+                v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
                 
                 M_hat = M_hat + 1e-8*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
                 Sigma_hat = Sigma_hat + 1e-8*np.eye(nx)
                 x0_cov_hat = x0_cov_hat + 1e-8*np.eye(nx) 
+                
                 # for DRLQC-------------------
                 W_hat = np.zeros((nx, nx, T+1))
                 V_hat = np.zeros((ny, ny, T+1))
@@ -239,14 +220,11 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     W_hat[:,:,i] = Sigma_hat[i]
                     V_hat[:,:,i] = M_hat[i]
                 # ----------------------------
-                print(V_hat.shape)
                 
                 #-------Create a random system-------
                 system_data = (A, B, C, Q, Qf, R, M)
                 
                 #-------Perform n  independent simulations and summarize the results-------
-                
-                
                 #Initialize controllers
                 
                 drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
@@ -290,10 +268,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                 drce_time_list.append(end-start)
                 
                 
-            if infinite:
-                path = "./results/{}_{}/infinite/multiple/DRLQC/".format(dist, noise_dist)
-            else:
-                path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
+            
+            path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
             if not os.path.exists(path):
                 os.makedirs(path)
             
@@ -328,10 +304,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
             print("DRLQC 1e-3 (std): ", drlqc_0_001_time_std)
             print("DRLQC 1e-2 (std): ", drlqc_0_01_time_std)
             
-        if infinite:
-            path = "./results/{}_{}/infinite/multiple/DRLQC/".format(dist, noise_dist)
-        else:
-            path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
+        
+        path = "./results/{}_{}/finite/multiple/DRLQC/".format(dist, noise_dist)
         if not os.path.exists(path):
             os.makedirs(path)    
         save_data(path + 'drlqc_0_0001_avgT.pkl', drlqc_0_0001_time_avg)
@@ -351,8 +325,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T, plot_res
                     
                     
     print("Time Data generation Completed!!")
+    print("Now use : python plot_time.py")
     
-            
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -362,9 +336,6 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
-    parser.add_argument('--plot', required=False, action="store_true") #plot results+
-    parser.add_argument('--noise_plot', required=False, action="store_true") # noise sample size plot
-    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     
     args = parser.parse_args()
-    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.plot, args.noise_plot, args.infinite)
+    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon)

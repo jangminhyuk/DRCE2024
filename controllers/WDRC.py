@@ -7,6 +7,7 @@ from scipy.optimize import minimize
 import cvxpy as cp
 import scipy
 
+# WDRC algorithm : Downloaded from the authors github
 class WDRC:
     def __init__(self, lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda):
         self.dist = dist
@@ -56,11 +57,11 @@ class WDRC:
         print("WDRC ", self.dist, " / ", self.noise_dist)    
         self.sdp_prob = self.gen_sdp()
 
-        if use_lambda==True:
+        if use_lambda==True: # Use pre-computed lambda
             self.lambda_ = np.array([lambda_])
         else:
             self.lambda_ = self.optimize_penalty() #optimize penalty parameter for theta
-            #print(self.lambda_)
+            
         
         
         self.P = np.zeros((self.T+1, self.nx, self.nx))

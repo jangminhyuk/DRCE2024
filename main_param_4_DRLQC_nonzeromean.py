@@ -94,7 +94,7 @@ def save_data(path, data):
     pickle.dump(data, output)
     output.close()
 
-def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite, plot_results):
+def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T):
     
     lambda_ = 10
     seed = 2024 # Random seed
@@ -104,7 +104,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     noisedist = [noise_dist1]
     num_noise_list = [num_noise_samples]
     
-    # for the noise_plot_results!!
     output_J_LQG_mean, output_J_WDRC_mean, output_J_DRCE_mean, output_J_DRLQC_mean =[], [], [], []
     output_J_LQG_std, output_J_WDRC_std, output_J_DRCE_std, output_J_DRLQC_std=[], [], [], []
     #-------Initialization-------
@@ -117,9 +116,8 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
     #----------------------------
     # You can change theta_v list and lambda_list ! but you also need to change lists at plot_params.py to get proper plot
     #theta_v_list = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0] # radius of noise ambiguity set
-    theta_v_list = [5.0, 10.0, 15.0] # radius of noise ambiguity set
     if dist=='normal':
-        theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
+        theta_v_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
         theta_w_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] # radius of noise ambiguity set
     else:
         theta_v_list = [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] # radius of noise ambiguity set
@@ -132,7 +130,7 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
         dist_parameter_list = lambda_list
     else:
         dist_parameter_list = theta_w_list
-    # Save lambda list
+    # Lambda list (from the given theta_w, WDRC and WDR-CE calcluates optimized lambda)
     WDRC_lambda = np.zeros((6,8))
     DRCE_lambda = np.zeros((6,8))
     for noise_dist in noisedist:
@@ -181,17 +179,6 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         x0_min = 0.8*np.ones(nx)
                         x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
                         x0_cov = 3.0/20.0 *np.diag((x0_max - x0_min)**2)
-                    elif dist =="uniform":
-                        #disturbance distribution parameters
-                        w_max = 0.3*np.ones(nx)
-                        w_min = -0.2*np.ones(nx)
-                        mu_w = (0.5*(w_max + w_min))[..., np.newaxis]
-                        Sigma_w = 1/12*np.diag((w_max - w_min)**2)
-                        #initial state distribution parameters
-                        x0_max = 0.1*np.ones(nx)
-                        x0_min = -0.1*np.ones(nx)
-                        x0_mean = (0.5*(x0_max + x0_min))[..., np.newaxis]
-                        x0_cov = 1/12*np.diag((x0_max - x0_min)**2)
                         
                     #-------Noise distribution ---------#
                     if noise_dist =="normal":
@@ -204,33 +191,20 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                         v_max = 2.5*np.ones(ny)
                         mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
                         M = 3.0/20.0 *np.diag((v_max-v_min)**2) #observation noise covariance
-                    elif noise_dist == "uniform":
-                        v_min = -1.0*np.ones(ny)
-                        v_max = 2.0*np.ones(ny)
-                        mu_v = (0.5*(v_max + v_min))[..., np.newaxis]
-                        M = 1/12*np.diag((v_max - v_min)**2) #observation noise covariance
-                        
                         
                     #-------Estimate the nominal distribution-------
-                    if infinite:
-                        # Nominal initial state distribution
-                        x0_mean_hat, x0_cov_hat = gen_sample_dist_inf(dist, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
-                        # Nominal Disturbance distribution
-                        mu_hat, Sigma_hat = gen_sample_dist_inf(dist, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                        # Nominal Noise distribution
-                        v_mean_hat, M_hat = gen_sample_dist_inf(noise_dist, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
-                    else:
-                        # Nominal initial state distribution
-                        x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
-                        # Nominal Disturbance distribution
-                        mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
-                        # Nominal Noise distribution
-                        v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                    # Nominal initial state distribution
+                    x0_mean_hat, x0_cov_hat = gen_sample_dist(dist, 1, num_x0_samples, mu_w=x0_mean, Sigma_w=x0_cov, w_max=x0_max, w_min=x0_min)
+                    # Nominal Disturbance distribution
+                    mu_hat, Sigma_hat = gen_sample_dist(dist, T+1, num_samples, mu_w=mu_w, Sigma_w=Sigma_w, w_max=w_max, w_min=w_min)
+                    # Nominal Noise distribution
+                    v_mean_hat, M_hat = gen_sample_dist(noise_dist, T+1, num_noise, mu_w=mu_v, Sigma_w=M, w_max=v_max, w_min=v_min)
+                
                     M_hat = M_hat + 1e-8*np.eye(ny) # to prevent numerical error from inverse in standard KF at small sample size
                     Sigma_hat = Sigma_hat + 1e-8*np.eye(nx)
                     x0_cov_hat = x0_cov_hat + 1e-8*np.eye(nx) 
                     
-                    # for DRLQC-------------------
+                    # ----- Construct Batch matrix for DRLQC-------------------
                     W_hat = np.zeros((nx, nx, T+1))
                     V_hat = np.zeros((ny, ny, T+1))
                     for i in range(T):
@@ -248,19 +222,12 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     output_drce_list = []
                     output_drlqc_list = []
                     
-                    #Initialize controllers
-                    
-                    if infinite:
-                        drce = inf_DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
-                        lqg = inf_LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat, x0_cov_hat)
-                        wdrc = inf_WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat, x0_cov_hat, use_lambda)
-                        
-                    else:
-                        drlqc = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol)
-                        wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                        drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
-                        lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
-                    
+                    #-----Initialize controllers-----
+                    drlqc = DRLQC(theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, W_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, V_hat, x0_mean_hat[0], x0_cov_hat[0], tol)
+                    wdrc = WDRC(lambda_, theta_w, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                    drce = DRCE(lambda_, theta_w, theta, theta_x0, T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat,  M_hat, x0_mean_hat[0], x0_cov_hat[0], use_lambda)
+                    lqg = LQG(T, dist, noise_dist, system_data, mu_hat, Sigma_hat, x0_mean, x0_cov, x0_max, x0_min, mu_w, Sigma_w, w_max, w_min, v_max, v_min, mu_v, v_mean_hat, M_hat , x0_mean_hat[0], x0_cov_hat[0])
+                
                     drlqc.solve_sdp()
                     drlqc.backward()
                     wdrc.backward()
@@ -374,30 +341,22 @@ def main(dist, noise_dist1, num_sim, num_samples, num_noise_samples, T,infinite,
                     print("dist : ", dist,"/ noise dist : ", noise_dist, "/ num_samples : ", num_samples, "/ num_noise_samples : ", num_noise, "/seed : ", seed)
                     
     print("Params data generation Completed !")
-    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_parms.py is as desired")
-    if infinite:
-        if use_lambda:
-            print("Now use : python plot_params4_drlqc_nonzeromean.py --infinite --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
-        else:
-            print("Now use : python plot_params4_drlqc_nonzeromean.py --infinite --dist "+ dist + " --noise_dist " + noise_dist)
+    print("Please make sure your lambda_list(or theta_w_list) and theta_v_list in plot_params4_drlqc_nonzeromean.py is as desired")
+    if use_lambda:
+        print("Now use : python plot_params4_drlqc_nonzeromean.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
     else:
-        if use_lambda:
-            print("Now use : python plot_params4_drlqc_nonzeromean.py --use_lambda --dist "+ dist + " --noise_dist " + noise_dist)
-        else:
-            print("Now use : python plot_params4_drlqc_nonzeromean.py --dist "+ dist + " --noise_dist " + noise_dist)
+        print("Now use : python plot_params4_drlqc_nonzeromean.py --dist "+ dist + " --noise_dist " + noise_dist)
     
             
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or uniform or quadratic)
-    parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or uniform or quadratic)
+    parser.add_argument('--dist', required=False, default="normal", type=str) #disurbance distribution (normal or quadratic)
+    parser.add_argument('--noise_dist', required=False, default="normal", type=str) #noise distribution (normal or quadratic)
     parser.add_argument('--num_sim', required=False, default=500, type=int) #number of simulation runs
     parser.add_argument('--num_samples', required=False, default=15, type=int) #number of disturbance samples
     parser.add_argument('--num_noise_samples', required=False, default=15, type=int) #number of noise samples
     parser.add_argument('--horizon', required=False, default=20, type=int) #horizon length
-    parser.add_argument('--plot', required=False, action="store_true") #plot results+
-    parser.add_argument('--infinite', required=False, action="store_true") #infinite horizon settings if flagged
     
     args = parser.parse_args()
-    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon, args.infinite, args.plot)
+    main(args.dist, args.noise_dist, args.num_sim, args.num_samples, args.num_noise_samples, args.horizon)
